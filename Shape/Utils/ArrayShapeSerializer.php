@@ -221,7 +221,7 @@ final class ArrayShapeSerializer
             case ShapeType::Document->value:
                 return $value instanceof AbstractDocument
                     ? $value
-                    : AbstractDocument::ofObject($value);
+                    : AbstractDocument::fromValue($value);
 
             case ShapeType::List_->value:
                 return self::hydrateList(

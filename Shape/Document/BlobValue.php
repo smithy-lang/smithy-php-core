@@ -6,7 +6,7 @@ namespace Smithy\Core\Shape\Document;
 
 /**
  * Marker wrapper that tags raw bytes as a Smithy blob for
- * {@see AbstractDocument::ofObject()}.
+ * {@see AbstractDocument::fromValue()}.
  *
  * A bare PHP string builds a {@see StringDocument}. Wrap the bytes in a `BlobValue` to route them
  * to {@see BlobDocument} instead.

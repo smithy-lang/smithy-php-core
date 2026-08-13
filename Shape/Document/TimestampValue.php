@@ -6,7 +6,7 @@ namespace Smithy\Core\Shape\Document;
 
 /**
  * Marker wrapper that tags a numeric epoch as a Smithy timestamp for
- * {@see AbstractDocument::ofObject()}.
+ * {@see AbstractDocument::fromValue()}.
  *
  * A bare PHP int builds an {@see IntegerDocument} and a bare float builds a {@see DoubleDocument}.
  * Wrap the value in a `TimestampValue` to route it to {@see TimestampDocument} instead.

@@ -231,7 +231,10 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return BooleanDocument Document wrapping the value.
      */
-    public static function ofBoolean(bool $value, ?Schema $schema = null): BooleanDocument
+    public static function fromBoolean(
+        bool $value,
+        ?Schema $schema = null
+    ): BooleanDocument
     {
         return new BooleanDocument($value, $schema);
     }
@@ -244,7 +247,7 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return ByteDocument Document wrapping the value.
      */
-    public static function ofByte(int $value, ?Schema $schema = null): ByteDocument
+    public static function fromByte(int $value, ?Schema $schema = null): ByteDocument
     {
         return new ByteDocument($value, $schema);
     }
@@ -257,7 +260,7 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return ShortDocument Document wrapping the value.
      */
-    public static function ofShort(int $value, ?Schema $schema = null): ShortDocument
+    public static function fromShort(int $value, ?Schema $schema = null): ShortDocument
     {
         return new ShortDocument($value, $schema);
     }
@@ -270,7 +273,10 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return IntegerDocument Document wrapping the value.
      */
-    public static function ofInteger(int $value, ?Schema $schema = null): IntegerDocument
+    public static function fromInteger(
+        int $value,
+        ?Schema $schema = null
+    ): IntegerDocument
     {
         return new IntegerDocument($value, $schema);
     }
@@ -283,7 +289,7 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return LongDocument Document wrapping the value.
      */
-    public static function ofLong(int $value, ?Schema $schema = null): LongDocument
+    public static function fromLong(int $value, ?Schema $schema = null): LongDocument
     {
         return new LongDocument($value, $schema);
     }
@@ -296,7 +302,10 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return FloatDocument Document wrapping the value.
      */
-    public static function ofFloat(float $value, ?Schema $schema = null): FloatDocument
+    public static function fromFloat(
+        float $value,
+        ?Schema $schema = null
+    ): FloatDocument
     {
         return new FloatDocument($value, $schema);
     }
@@ -309,7 +318,10 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return DoubleDocument Document wrapping the value.
      */
-    public static function ofDouble(float $value, ?Schema $schema = null): DoubleDocument
+    public static function fromDouble(
+        float $value,
+        ?Schema $schema = null
+    ): DoubleDocument
     {
         return new DoubleDocument($value, $schema);
     }
@@ -322,7 +334,7 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return BigIntegerDocument Document wrapping the value.
      */
-    public static function ofBigInteger(
+    public static function fromBigInteger(
         BigInteger $value,
         ?Schema $schema = null
     ): BigIntegerDocument
@@ -338,7 +350,7 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return BigDecimalDocument Document wrapping the value.
      */
-    public static function ofBigDecimal(
+    public static function fromBigDecimal(
         BigDecimal $value,
         ?Schema $schema = null
     ): BigDecimalDocument
@@ -354,39 +366,53 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return StringDocument Document wrapping the value.
      */
-    public static function ofString(string $value, ?Schema $schema = null): StringDocument
+    public static function fromString(
+        string $value,
+        ?Schema $schema = null
+    ): StringDocument
     {
         return new StringDocument($value, $schema);
     }
 
     /**
-     * Build a {@see BlobDocument} from raw bytes.
+     * Build a {@see BlobDocument} from raw bytes or a blob wrapper.
      *
-     * @param string $bytes Blob payload.
+     * @param string|BlobValue $bytes Blob payload or already-boxed blob marker.
      * @param Schema|null $schema Schema to attach, or null for an untyped document.
      *
      * @return BlobDocument Document wrapping the bytes.
      */
-    public static function ofBlob(string $bytes, ?Schema $schema = null): BlobDocument
+    public static function fromBlob(
+        string|BlobValue $bytes,
+        ?Schema $schema = null
+    ): BlobDocument
     {
-        return new BlobDocument($bytes, $schema);
+        return new BlobDocument(
+            $bytes instanceof BlobValue ? $bytes->bytes : $bytes,
+            $schema
+        );
     }
 
     /**
-     * Build a {@see TimestampDocument} from an epoch-seconds value.
+     * Build a {@see TimestampDocument} from an epoch-seconds value or timestamp wrapper.
      *
-     * @param float $epochSeconds Seconds since the Unix epoch. Fractional part carries
-     *              sub-second precision.
+     * @param float|TimestampValue $epochSeconds Seconds since the Unix epoch, or a boxed timestamp
+     *              marker. Fractional part carries sub-second precision.
      * @param Schema|null $schema Schema to attach, or null for an untyped document.
      *
      * @return TimestampDocument Document wrapping the timestamp.
      */
-    public static function ofTimestamp(
-        float $epochSeconds,
+    public static function fromTimestamp(
+        float|TimestampValue $epochSeconds,
         ?Schema $schema = null
     ): TimestampDocument
     {
-        return new TimestampDocument($epochSeconds, $schema);
+        return new TimestampDocument(
+            $epochSeconds instanceof TimestampValue
+                ? $epochSeconds->epochSeconds
+                : $epochSeconds,
+            $schema
+        );
     }
 
     /**
@@ -397,7 +423,10 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return ListDocument Document wrapping the items.
      */
-    public static function ofList(array $items, ?Schema $schema = null): ListDocument
+    public static function fromList(
+        array $items,
+        ?Schema $schema = null
+    ): ListDocument
     {
         return new ListDocument($items, $schema);
     }
@@ -410,7 +439,10 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @return MapDocument Document wrapping the entries.
      */
-    public static function ofMap(array $entries, ?Schema $schema = null): MapDocument
+    public static function fromMap(
+        array $entries,
+        ?Schema $schema = null
+    ): MapDocument
     {
         return new MapDocument($entries, $schema);
     }
@@ -435,7 +467,8 @@ abstract class AbstractDocument implements DocumentInterface
      *   BigDecimal -> BigDecimalDocument
      *
      * Wrap the payload in {@see BlobValue} to route a byte string to {@see BlobDocument}, or in
-     * {@see TimestampValue} to route a numeric epoch to {@see TimestampDocument}.
+     * {@see TimestampValue} to route a numeric epoch to {@see TimestampDocument}. Call
+     * {@see fromBlob()} or {@see fromTimestamp()} directly when you already know the target type.
      *
      * @param mixed $value Payload to wrap.
      * @param Schema|null $schema Schema to attach to the root document, or null when untyped.
@@ -445,19 +478,22 @@ abstract class AbstractDocument implements DocumentInterface
      * @throws \InvalidArgumentException When the payload's runtime type has no document mapping
      *                                   (resources, unrecognized objects).
      */
-    public static function ofObject(mixed $value, ?Schema $schema = null): ?AbstractDocument
+    public static function fromValue(
+        mixed $value,
+        ?Schema $schema = null
+    ): ?AbstractDocument
     {
         // gettype() gives one string per PHP runtime type. Object dispatches on class.
         switch (\gettype($value)) {
             case 'boolean':
-                return new BooleanDocument($value, $schema);
+                return self::fromBoolean($value, $schema);
             case 'integer':
-                return new IntegerDocument($value, $schema);
+                return self::fromInteger($value, $schema);
             case 'double':
                 // gettype() returns "double" for PHP floats.
-                return new DoubleDocument($value, $schema);
+                return self::fromDouble($value, $schema);
             case 'string':
-                return new StringDocument($value, $schema);
+                return self::fromString($value, $schema);
             case 'NULL':
                 return null;
             case 'array':
@@ -467,20 +503,20 @@ abstract class AbstractDocument implements DocumentInterface
             case 'object':
                 return match (true) {
                     $value instanceof AbstractDocument => $value,
-                    $value instanceof BigInteger => new BigIntegerDocument(
+                    $value instanceof BigInteger => self::fromBigInteger(
                         $value,
                         $schema
                     ),
-                    $value instanceof BigDecimal => new BigDecimalDocument(
+                    $value instanceof BigDecimal => self::fromBigDecimal(
                         $value,
                         $schema
                     ),
-                    $value instanceof BlobValue => new BlobDocument(
-                        $value->bytes,
+                    $value instanceof BlobValue => self::fromBlob(
+                        $value,
                         $schema
                     ),
-                    $value instanceof TimestampValue => new TimestampDocument(
-                        $value->epochSeconds,
+                    $value instanceof TimestampValue => self::fromTimestamp(
+                        $value,
                         $schema
                     ),
                     $value instanceof \stdClass => self::buildMap(
@@ -513,10 +549,10 @@ abstract class AbstractDocument implements DocumentInterface
     {
         $docs = [];
         foreach ($items as $v) {
-            $docs[] = self::ofObject($v);
+            $docs[] = self::fromValue($v);
         }
 
-        return new ListDocument($docs, $schema);
+        return self::fromList($docs, $schema);
     }
 
     /**
@@ -531,10 +567,10 @@ abstract class AbstractDocument implements DocumentInterface
     {
         $docs = [];
         foreach ($entries as $k => $v) {
-            $docs[(string) $k] = self::ofObject($v);
+            $docs[(string) $k] = self::fromValue($v);
         }
 
-        return new MapDocument($docs, $schema);
+        return self::fromMap($docs, $schema);
     }
 
     /**
