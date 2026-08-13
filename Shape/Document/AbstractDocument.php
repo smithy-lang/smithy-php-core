@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Smithy\Core\Shape\Document;
 
 use Smithy\Core\Serde\Schema;
-use Smithy\Core\Serde\SerializableShapeInterface;
 use Smithy\Core\Serde\ShapeSerializerInterface;
 use Smithy\Core\Serde\ShapeType;
 use Smithy\Core\Shape\BigDecimal;
