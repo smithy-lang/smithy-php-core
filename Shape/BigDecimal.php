@@ -27,7 +27,6 @@ final readonly class BigDecimal
      *               grammar (RFC 8259 §6): optional sign, integer part (either `0` or a non-zero
      *               digit followed by any digits), optional fractional part, optional exponent.
      *
-     * @return void
      * @throws \InvalidArgumentException When `$value` does not match the JSON number grammar.
      */
     public function __construct(public string $value)
@@ -35,7 +34,7 @@ final readonly class BigDecimal
         if (!\preg_match(self::VALUE_PATTERN, $value)) {
             throw new \InvalidArgumentException(
                 "Invalid BigDecimal value '{$value}': "
-                    . 'expected a decimal number, optionally in exponent form.',
+                    . 'expected a decimal number, optionally in exponent form.'
             );
         }
     }

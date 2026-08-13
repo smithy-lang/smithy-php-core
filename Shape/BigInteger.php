@@ -25,7 +25,6 @@ final readonly class BigInteger
      * @param string $value Wire representation of the integer. Must be an optional minus sign
      *               followed by one or more decimal digits.
      *
-     * @return void
      * @throws \InvalidArgumentException When `$value` does not match the integer subset of the JSON
      *                                   number grammar.
      */
@@ -34,7 +33,7 @@ final readonly class BigInteger
         if (!\preg_match(self::VALUE_PATTERN, $value)) {
             throw new \InvalidArgumentException(
                 "Invalid BigInteger value '{$value}': "
-                    . 'expected an optional minus sign followed by digits.',
+                    . 'expected an optional minus sign followed by digits.'
             );
         }
     }
