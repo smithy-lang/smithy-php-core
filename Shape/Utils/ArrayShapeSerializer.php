@@ -10,6 +10,7 @@ use Smithy\Core\Serde\ShapeType;
 use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
 use Smithy\Core\Shape\Document\AbstractDocument;
+use Smithy\Core\Shape\UnionInterface;
 
 /**
  * Schema-driven converter between generated shape objects and their V3-compatible associative
@@ -29,13 +30,13 @@ use Smithy\Core\Shape\Document\AbstractDocument;
 final class ArrayShapeSerializer
 {
     /**
-     * Convert a generated shape into its V3-compatible associative array.
+     * Convert a generated structure or union into its V3-compatible associative array.
      *
-     * @param SerializableStructInterface $shape Shape instance to convert.
+     * @param SerializableStructInterface|UnionInterface $shape Shape instance to convert.
      *
-     * @return array<string, mixed> V3-shaped payload keyed by PascalCase wire member names.
+     * @return array<string, mixed> V3-shaped payload keyed by modeled wire member names.
      */
-    public static function toArray(SerializableStructInterface $shape): array
+    public static function toArray(SerializableStructInterface|UnionInterface $shape): array
     {
         $result = [];
         foreach ($shape::schema()->getMembersByIndex() as $memberSchema) {
@@ -76,13 +77,28 @@ final class ArrayShapeSerializer
     /**
      * Build an instance of a generated shape from an associative array.
      *
-     * @param class-string $className Generated structure or union class.
+     * @param class-string<SerializableStructInterface|UnionInterface> $className Generated
+     *        structure or union class.
      * @param array<string, mixed> $data V3-shaped payload keyed by PascalCase wire member names.
      *
-     * @return object Hydrated instance of `$className`.
+     * @return SerializableStructInterface|UnionInterface Hydrated instance of `$className`.
      */
     public static function fromArray(string $className, array $data): object
     {
+        if (!\is_a($className, SerializableStructInterface::class, true)
+            && !\is_a($className, UnionInterface::class, true)
+        ) {
+            throw new \InvalidArgumentException(
+                \sprintf(
+                    'ArrayShapeSerializer::fromArray() expects a class implementing '
+                    . '%s or %s; got %s.',
+                    SerializableStructInterface::class,
+                    UnionInterface::class,
+                    $className
+                )
+            );
+        }
+
         /** @var Schema $schema */
         $schema = $className::schema();
         $args = [];
