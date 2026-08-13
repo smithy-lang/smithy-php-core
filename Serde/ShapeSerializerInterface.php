@@ -119,15 +119,13 @@ interface ShapeSerializerInterface
      * @param Schema $schema Member schema for the field being written.
      * @param float $value Epoch seconds. Integer values pass through as-is.
      * @param int $idx Positional index of the member in the parent frame.
-     * @param TimestampFormat|null $format Codegen-resolved format hint. Null falls back to the
-     *                             codec default.
      *
      * @return void
      */
     public function serializeTimestamp(
         Schema $schema,
-        float $value, int $idx,
-        ?TimestampFormat $format = null
+        float $value,
+        int $idx
     ): void;
 
     /**
