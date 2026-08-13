@@ -136,15 +136,13 @@ interface ShapeSerializerInterface
      * @param Schema $schema Member schema for the field being written.
      * @param list<mixed> $list Ordered list of member values.
      * @param int $idx Positional index of the member in the parent frame.
-     * @param ShapeType $memberType Type of list items (for type-dispatched serialization).
      *
      * @return void
      */
     public function serializeList(
         Schema $schema,
         array $list,
-        int $idx,
-        ShapeType $memberType
+        int $idx
     ): void;
 
     /**

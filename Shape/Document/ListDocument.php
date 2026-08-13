@@ -60,8 +60,7 @@ final class ListDocument extends AbstractDocument
         $serializer->serializeList(
             $this->schema ?? PreludeSchemas::for($this->type()),
             $this->items,
-            $idx,
-            ShapeType::Document
+            $idx
         );
     }
 }
