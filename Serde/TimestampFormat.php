@@ -61,6 +61,7 @@ enum TimestampFormat: int
      *
      * @return float Epoch seconds. Integer values are returned via PHP's int→float widening,
      *               fractional-second variants keep their fractional component.
+     * @throws \InvalidArgumentException When the value cannot be parsed in this format.
      */
     public function parse(string $value): float
     {
@@ -101,7 +102,7 @@ enum TimestampFormat: int
                 }
                 // Offset variants: strtotime is fast on numeric offsets
                 // (it is only slow on trailing-Z strings: 11.4us vs ~0.7us).
-                return \strtotime($value);
+                return self::parseWithStrtotime($value, $this);
 
             case 2:
                 // "Thu, 15 Jan 2024 10:30:00 GMT". Day-epoch memo keyed on
@@ -114,6 +115,30 @@ enum TimestampFormat: int
                     + (int) \substr($value, 20, 2) * 60
                     + (int) \substr($value, 23, 2);
         }
+    }
+
+    /**
+     * Parse a timestamp string with `strtotime()` and throw on failure.
+     *
+     * @param string $value Wire timestamp string.
+     * @param self $format Expected timestamp format.
+     *
+     * @return int Parsed Unix timestamp.
+     * @throws \InvalidArgumentException When `strtotime()` cannot parse `$value`.
+     */
+    private static function parseWithStrtotime(
+        string $value,
+        self $format
+    ): int
+    {
+        $parsed = \strtotime($value);
+        if ($parsed !== false) {
+            return $parsed;
+        }
+
+        throw new \InvalidArgumentException(
+            "Invalid {$format->name} timestamp '{$value}'."
+        );
     }
 
     /**

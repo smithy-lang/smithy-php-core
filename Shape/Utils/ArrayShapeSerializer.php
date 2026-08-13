@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Smithy\Core\Shape;
+namespace Smithy\Core\Shape\Utils;
 
 use Smithy\Core\Serde\Schema;
 use Smithy\Core\Serde\SerializableStructInterface;
@@ -19,17 +19,12 @@ use Smithy\Core\Shape\Document\AbstractDocument;
  * (PascalCase wire keys, scalars passing through, structs and unions recursing, enums and
  * big-numerics unwrapping to their `->value`, lists and maps mapping element-wise).
  *
- * `fromArray()` pairs a schema with a generated shape class (carried by `Schema::$targetClass` on
- * the root structure or union schema). It walks the same member schemas, hydrates each present
- * key into the matching PHP type, and named-args spreads the result into `new $targetClass(...)`.
- * V3-compat coercions live in {@see self::hydrateMember()} so V3-shaped input (numeric strings
- * into integer members, ints/floats/stringables into string members, raw arrays or scalars into
- * document members) does not TypeError at the strict-typed constructor parameters.
+ * `fromArray()` takes a generated shape class name, resolves its schema through `::schema()`,
+ * hydrates each present member into the matching PHP type, and named-args spreads the result into
+ * `new $className(...)`.
  *
  * Wire keys are `Schema::$memberName` (PascalCase). Constructor argument names are the camelCase
  * property name (`lcfirst($memberName)`).
- *
- * {@see ArraySerializableTrait} is the per-shape entry point that delegates here.
  */
 final class ArrayShapeSerializer
 {
@@ -79,27 +74,17 @@ final class ArrayShapeSerializer
     }
 
     /**
-     * Build an instance of the schema's `targetClass` from an associative array.
+     * Build an instance of a generated shape from an associative array.
      *
-     * The schema must be a root structure or union schema with a non-null `targetClass`. Codegen
-     * emits this on every generated structure and union root schema.
-     *
-     * @param Schema $schema Root schema whose `targetClass` names the concrete PHP class.
+     * @param class-string $className Generated structure or union class.
      * @param array<string, mixed> $data V3-shaped payload keyed by PascalCase wire member names.
      *
-     * @return object Hydrated instance of `$schema->targetClass`.
-     * @throws \LogicException When the schema has no `targetClass`.
+     * @return object Hydrated instance of `$className`.
      */
-    public static function fromArray(Schema $schema, array $data): object
+    public static function fromArray(string $className, array $data): object
     {
-        $class = $schema->targetClass;
-        if ($class === null) {
-            throw new \LogicException(
-                'ArrayShapeSerializer::fromArray() requires a schema '
-                . "with a non-null targetClass. Got schema id '{$schema->id}'."
-            );
-        }
-
+        /** @var Schema $schema */
+        $schema = $className::schema();
         $args = [];
         foreach ($schema->getMembersByIndex() as $memberSchema) {
             $name = $memberSchema->memberName;
@@ -117,7 +102,7 @@ final class ArrayShapeSerializer
             );
         }
 
-        return new $class(...$args);
+        return new $className(...$args);
     }
 
     /**
@@ -127,6 +112,7 @@ final class ArrayShapeSerializer
      * @param mixed $value Raw wire value.
      *
      * @return mixed Coerced value ready to pass to the constructor.
+     * @throws \InvalidArgumentException When a timestamp string cannot be parsed.
      */
     private static function hydrateMember(Schema $memberSchema, mixed $value): mixed
     {
@@ -141,16 +127,9 @@ final class ArrayShapeSerializer
                 if ($class === null || !\is_array($value)) {
                     return $value;
                 }
-                // Structures and unions both expose `::fromArray(array)`, but they need
-                // different dispatch paths. Structures delegate back into this serializer via
-                // {@see ArraySerializableTrait}, which calls
-                // `ArrayShapeSerializer::fromArray($schema, $data)` and ends up at
-                // `new $class(...)`. Unions are abstract base classes. `new $class(...)` would
-                // fail there, so the generated `Foo::fromArray()` inspects `array_key_first($data)`
-                // and dispatches to the right variant subclass. Calling the per-class entry point
-                // covers both cases.
-
-                return $class::fromArray($value);
+                // Nested structures and unions recurse back through the serializer using the
+                // target class named on the member schema.
+                return self::fromArray($class, $value);
 
             case ShapeType::Enum->value:
             case ShapeType::IntEnum->value:
@@ -179,7 +158,7 @@ final class ArrayShapeSerializer
                 }
 
                 if (\is_string($value)) {
-                    return \strtotime($value);
+                    return self::parseTimestampString($memberSchema, $value);
                 }
 
                 return $value;
@@ -225,13 +204,11 @@ final class ArrayShapeSerializer
                     default => $value
                 };
 
-            // V3-compat blob coercion. V3's `check_blob` accepted scalars and stringable objects.
-            // Resources are excluded. Streaming payloads use `@streaming` blobs typed as
-            // `StreamInterface`.
+            // V3-compat blob coercion. Keep this to byte strings and stringable objects so plain
+            // blob members continue to model raw bytes rather than arbitrary scalar conversion.
             case ShapeType::Blob->value:
                 return match (\gettype($value)) {
                     'string' => $value,
-                    'integer', 'double' => (string) $value,
                     'object' => \method_exists($value, '__toString')
                         ? (string) $value
                         : $value,
@@ -258,6 +235,31 @@ final class ArrayShapeSerializer
             default:
                 return $value;
         }
+    }
+
+    /**
+     * Parse a timestamp string for a schema member.
+     *
+     * @param Schema $memberSchema Schema describing the timestamp-bearing member or item.
+     * @param string $value Raw timestamp string.
+     *
+     * @return int Parsed Unix timestamp.
+     * @throws \InvalidArgumentException When `$value` cannot be parsed by `strtotime()`.
+     */
+    private static function parseTimestampString(
+        Schema $memberSchema,
+        string $value
+    ): int
+    {
+        $parsed = \strtotime($value);
+        if ($parsed !== false) {
+            return $parsed;
+        }
+
+        $label = $memberSchema->memberName ?? $memberSchema->id;
+        throw new \InvalidArgumentException(
+            "Invalid timestamp value '{$value}' for schema '{$label}'."
+        );
     }
 
     /**
@@ -354,6 +356,7 @@ final class ArrayShapeSerializer
                 }
 
                 return $out;
+
             case ShapeType::Union->value:
                 $out = [];
                 foreach ($items as $k => $v) {
@@ -361,8 +364,16 @@ final class ArrayShapeSerializer
                 }
 
                 return $out;
+
             case ShapeType::Enum->value:
             case ShapeType::IntEnum->value:
+                $out = [];
+                foreach ($items as $k => $v) {
+                    $out[$k] = $v === null ? null : $v->value;
+                }
+
+                return $out;
+
             case ShapeType::BigInteger->value:
             case ShapeType::BigDecimal->value:
                 $out = [];
@@ -371,6 +382,7 @@ final class ArrayShapeSerializer
                 }
 
                 return $out;
+
             default:
                 return $items;
         }

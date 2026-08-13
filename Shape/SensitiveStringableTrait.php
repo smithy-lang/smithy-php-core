@@ -20,9 +20,6 @@ use Smithy\Core\Serde\SerializableStructInterface;
  * The output is deterministic, keyed by member name, and includes only populated members.
  * Sensitive members render as `"***REDACTED***"` regardless of value. Non-sensitive struct or
  * union members recurse (their own `__toString()` handles redaction).
- *
- * Any generated shape can add `use SensitiveStringableTrait;` in the class body. The trait is
- * orthogonal to {@see ArraySerializableTrait} and coexists with it.
  */
 trait SensitiveStringableTrait
 {
