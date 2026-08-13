@@ -7,13 +7,13 @@ namespace Smithy\Core\Serde;
 /**
  * Singleton schemas for the `smithy.api#*` prelude types.
  *
- * Loaded on file include. Reused across all services so a `smithy.api#String`
- * member target does not construct a new Schema per shape.
+ * Loaded on file include. Reused across all services so a `smithy.api#String` member target does
+ * not construct a new Schema per shape.
  *
  * @see https://smithy.io/2.0/spec/model.html#prelude
  *
- * @internal Codegen boot cache. Reach these through the generated shape's
- * `schema()` method rather than holding the singletons directly.
+ * @internal Codegen boot cache. Reach these through the generated shape's `schema()` method rather
+ *                   than holding the singletons directly.
  */
 final class PreludeSchemas
 {
@@ -34,10 +34,12 @@ final class PreludeSchemas
     private static bool $initialized = false;
 
     /**
-     * Initializes all prelude schema singletons.
+     * Initialize all prelude schema singletons.
      *
-     * Called at file-load time (bottom of this file). Idempotent, so
-     * callers can invoke it explicitly to force eager initialization.
+     * Called at file-load time (bottom of this file). Idempotent, so callers can invoke it
+     * explicitly to force eager initialization.
+     *
+     * @return void
      */
     public static function init(): void
     {
@@ -45,27 +47,60 @@ final class PreludeSchemas
             return;
         }
 
-        self::$STRING = new Schema(id: 'smithy.api#String', type: ShapeType::String_);
-        self::$INTEGER = new Schema(id: 'smithy.api#Integer', type: ShapeType::Integer);
+        self::$STRING = new Schema(
+            id: 'smithy.api#String',
+            type: ShapeType::String_,
+        );
+        self::$INTEGER = new Schema(
+            id: 'smithy.api#Integer',
+            type: ShapeType::Integer,
+        );
         self::$LONG = new Schema(id: 'smithy.api#Long', type: ShapeType::Long);
-        self::$SHORT = new Schema(id: 'smithy.api#Short', type: ShapeType::Short);
+        self::$SHORT = new Schema(
+            id: 'smithy.api#Short',
+            type: ShapeType::Short,
+        );
         self::$BYTE = new Schema(id: 'smithy.api#Byte', type: ShapeType::Byte);
-        self::$FLOAT = new Schema(id: 'smithy.api#Float', type: ShapeType::Float_);
-        self::$DOUBLE = new Schema(id: 'smithy.api#Double', type: ShapeType::Double);
-        self::$BOOLEAN = new Schema(id: 'smithy.api#Boolean', type: ShapeType::Boolean);
+        self::$FLOAT = new Schema(
+            id: 'smithy.api#Float',
+            type: ShapeType::Float_,
+        );
+        self::$DOUBLE = new Schema(
+            id: 'smithy.api#Double',
+            type: ShapeType::Double,
+        );
+        self::$BOOLEAN = new Schema(
+            id: 'smithy.api#Boolean',
+            type: ShapeType::Boolean,
+        );
         self::$BLOB = new Schema(id: 'smithy.api#Blob', type: ShapeType::Blob);
-        self::$TIMESTAMP = new Schema(id: 'smithy.api#Timestamp', type: ShapeType::Timestamp);
-        self::$BIG_INTEGER = new Schema(id: 'smithy.api#BigInteger', type: ShapeType::BigInteger);
-        self::$BIG_DECIMAL = new Schema(id: 'smithy.api#BigDecimal', type: ShapeType::BigDecimal);
-        self::$DOCUMENT = new Schema(id: 'smithy.api#Document', type: ShapeType::Document);
+        self::$TIMESTAMP = new Schema(
+            id: 'smithy.api#Timestamp',
+            type: ShapeType::Timestamp,
+        );
+        self::$BIG_INTEGER = new Schema(
+            id: 'smithy.api#BigInteger',
+            type: ShapeType::BigInteger,
+        );
+        self::$BIG_DECIMAL = new Schema(
+            id: 'smithy.api#BigDecimal',
+            type: ShapeType::BigDecimal,
+        );
+        self::$DOCUMENT = new Schema(
+            id: 'smithy.api#Document',
+            type: ShapeType::Document,
+        );
 
         self::$initialized = true;
     }
 
     /**
-     * Returns the prelude schema for `$shapeId`, or null if not a prelude type.
+     * Return the prelude schema for `$shapeId`, or null when it is not a prelude type.
      *
-     * @param string $shapeId e.g., "smithy.api#String"
+     * @param string $shapeId Fully qualified shape ID, e.g. "smithy.api#String".
+     *
+     * @return Schema|null Schema singleton for the prelude type, or null when `$shapeId` does not
+     *                     name a prelude shape.
      */
     public static function get(string $shapeId): ?Schema
     {
@@ -90,11 +125,17 @@ final class PreludeSchemas
     }
 
     /**
-     * True when `$shapeId` names a Smithy prelude type.
+     * Return true when `$shapeId` names a Smithy prelude type.
+     *
+     * @param string $shapeId Fully qualified shape ID, e.g. "smithy.api#String".
+     *
+     * @return bool True when `$shapeId` is in the `smithy.api#` namespace and names one of the
+     *              built-in prelude types.
      */
     public static function isPreludeShape(string $shapeId): bool
     {
-        return \str_starts_with($shapeId, 'smithy.api#') && self::get($shapeId) !== null;
+        return \str_starts_with($shapeId, 'smithy.api#')
+            && self::get($shapeId) !== null;
     }
 }
 

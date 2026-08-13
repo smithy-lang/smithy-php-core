@@ -7,20 +7,18 @@ namespace Smithy\Core\Serde;
 /**
  * Runtime schema for a Smithy shape.
  *
- * Structure and union schemas hold member schemas that reference their
- * targets, forming a graph that mirrors the Smithy shape graph. This drives
- * serialization and deserialization without reflection.
+ * Structure and union schemas hold member schemas that reference their targets, forming a graph
+ * that mirrors the Smithy shape graph. This drives serialization and deserialization without
+ * reflection.
  *
- * `$type` is stored as `ShapeType::$value` (int) so codec dispatch can
- * switch on a literal-int discriminant. Pass a {@see ShapeType} case to
- * the constructor. The unwrap happens once, there.
+ * `$type` is stored as `ShapeType::$value` (int) so codec dispatch can switch on a literal-int
+ * discriminant. Pass a {@see ShapeType} case to the constructor. The unwrap happens once, there.
  *
- * Traits are int-keyed. Access with `getTrait($key)` / `hasTrait($key)`
- * using the `T_*` class constants below. The packed storage layout is
- * implementation detail.
+ * Traits are int-keyed. Access with `getTrait($key)` / `hasTrait($key)` using the `T_*` class
+ * constants below. The packed storage layout is implementation detail.
  *
- * Schemas MUST store their ShapeId and ShapeType (per SEP requirements)
- * and MUST NOT reference generated data-object classes.
+ * Schemas MUST store their ShapeId and ShapeType (per SEP requirements) and MUST NOT reference
+ * generated data-object classes.
  */
 final class Schema
 {
@@ -58,25 +56,27 @@ final class Schema
     private int $memberCount;
 
     /**
-     * Stored as `ShapeType::$value` (int) so codec dispatch can switch on a
-     * literal-int discriminant. The constructor unwraps a {@see ShapeType}
-     * case exactly once.
+     * Stored as `ShapeType::$value` (int) so codec dispatch can switch on a literal-int
+     * discriminant. The constructor unwraps a {@see ShapeType} case exactly once.
      *
      * @var int
      */
     public readonly int $type;
 
     /**
-     * @param string $id Fully-qualified ShapeId (e.g., "com.amazonaws.sts#AssumeRoleRequest")
-     * @param ShapeType $type The shape type. For members, this is the TARGET type.
-     * @param string|null $memberName Member name for member schemas, null for root schemas
-     * @param int|null $memberIndex Position index for this member (used by switch-dispatched deserializers)
-     * @param list<Schema> $members Member schemas (for structures/unions)
-     * @param Schema|null $listMember Schema for list item type
-     * @param Schema|null $mapKey Schema for map key type
-     * @param Schema|null $mapValue Schema for map value type
-     * @param array<int, mixed> $traits Serde-relevant traits (int key => trait value)
-     * @param string|null $targetClass FQCN of the target shape class for recursive references
+     * @param string $id Fully-qualified ShapeId (e.g., "com.amazonaws.sts#AssumeRoleRequest").
+     * @param ShapeType $type Shape type. For members, this is the TARGET type.
+     * @param string|null $memberName Member name for member schemas, null for root schemas.
+     * @param int|null $memberIndex Position index for this member (used by switch-dispatched
+     *                 deserializers).
+     * @param list<Schema> $members Member schemas (for structures/unions).
+     * @param Schema|null $listMember Schema for list item type.
+     * @param Schema|null $mapKey Schema for map key type.
+     * @param Schema|null $mapValue Schema for map value type.
+     * @param array<int, mixed> $traits Serde-relevant traits (int key => trait value).
+     * @param string|null $targetClass FQCN of the target shape class for recursive references.
+     *
+     * @return void
      */
     public function __construct(
         public readonly string $id,
@@ -104,7 +104,9 @@ final class Schema
     }
 
     /**
-     * True when this schema represents a member rather than a root shape.
+     * Return true when this schema represents a member rather than a root shape.
+     *
+     * @return bool True when `$memberName` is set.
      */
     public function isMember(): bool
     {
@@ -112,7 +114,11 @@ final class Schema
     }
 
     /**
-     * Returns the member schema for `$name`, or null if no such member.
+     * Return the member schema for `$name`, or null when the struct has no such member.
+     *
+     * @param string $name Member name from the Smithy model.
+     *
+     * @return Schema|null Member schema, or null when absent.
      */
     public function getMember(string $name): ?Schema
     {
@@ -120,7 +126,11 @@ final class Schema
     }
 
     /**
-     * Returns the member schema at position `$index`, or null.
+     * Return the member schema at position `$index`, or null when no member lives at that index.
+     *
+     * @param int $index Zero-based member position.
+     *
+     * @return Schema|null Member schema, or null when absent.
      */
     public function getMemberByIndex(int $index): ?Schema
     {
@@ -128,7 +138,9 @@ final class Schema
     }
 
     /**
-     * @return array<string, Schema> Member name => Schema
+     * Return the name-keyed member map for this shape.
+     *
+     * @return array<string, Schema> Member name => Schema.
      */
     public function getMembers(): array
     {
@@ -136,7 +148,9 @@ final class Schema
     }
 
     /**
-     * @return array<int, Schema> Position index => Schema
+     * Return the index-keyed member map for this shape.
+     *
+     * @return array<int, Schema> Position index => Schema.
      */
     public function getMembersByIndex(): array
     {
@@ -144,7 +158,9 @@ final class Schema
     }
 
     /**
-     * List item schema. Null for non-list shapes.
+     * Return the list item schema. Null for non-list shapes.
+     *
+     * @return Schema|null List item schema, or null when the shape is not a list.
      */
     public function getListMember(): ?Schema
     {
@@ -152,7 +168,9 @@ final class Schema
     }
 
     /**
-     * Map key schema. Null for non-map shapes.
+     * Return the map key schema. Null for non-map shapes.
+     *
+     * @return Schema|null Map key schema, or null when the shape is not a map.
      */
     public function getMapKey(): ?Schema
     {
@@ -160,7 +178,9 @@ final class Schema
     }
 
     /**
-     * Map value schema. Null for non-map shapes.
+     * Return the map value schema. Null for non-map shapes.
+     *
+     * @return Schema|null Map value schema, or null when the shape is not a map.
      */
     public function getMapValue(): ?Schema
     {
@@ -168,7 +188,11 @@ final class Schema
     }
 
     /**
-     * @param int $traitKey Trait constant (Schema::T_*)
+     * Return true when this schema carries the trait identified by `$traitKey`.
+     *
+     * @param int $traitKey Trait constant (Schema::T_*).
+     *
+     * @return bool True when a value is stored under `$traitKey`.
      */
     public function hasTrait(int $traitKey): bool
     {
@@ -176,9 +200,11 @@ final class Schema
     }
 
     /**
-     * Returns the trait value, or null if the trait is absent.
+     * Return the trait value, or null when the trait is absent.
      *
-     * @param int $traitKey Trait constant (Schema::T_*)
+     * @param int $traitKey Trait constant (Schema::T_*).
+     *
+     * @return mixed Trait value, or null when absent.
      */
     public function getTrait(int $traitKey): mixed
     {
@@ -186,7 +212,9 @@ final class Schema
     }
 
     /**
-     * @return array<int, mixed> Trait key => trait value
+     * Return the full trait map for this schema.
+     *
+     * @return array<int, mixed> Trait key => trait value.
      */
     public function getTraits(): array
     {
@@ -194,8 +222,11 @@ final class Schema
     }
 
     /**
-     * Wire name for this member. Uses the `@jsonName` trait if present,
-     * otherwise the member name.
+     * Return the wire name for this member. Uses the `@jsonName` trait if present, otherwise the
+     * member name.
+     *
+     * @return string Wire name for this member, or empty string when the schema is a root shape
+     *                with no `@jsonName` trait.
      */
     public function getWireName(): string
     {
@@ -203,7 +234,9 @@ final class Schema
     }
 
     /**
-     * True when the `@required` trait is set on this member.
+     * Return true when the `@required` trait is set on this member.
+     *
+     * @return bool True when `T_REQUIRED` is present in the trait map.
      */
     public function isRequired(): bool
     {
@@ -211,7 +244,9 @@ final class Schema
     }
 
     /**
-     * Number of members in this schema.
+     * Return the number of members in this schema.
+     *
+     * @return int Member count (0 for non-aggregate shapes).
      */
     public function getMemberCount(): int
     {
@@ -219,11 +254,13 @@ final class Schema
     }
 
     /**
-     * Resolves the target schema for recursive references.
+     * Resolve the target schema for recursive references.
      *
-     * When this member has `targetClass` set but no inline members, calls
-     * `targetClass::schema()` to fetch the populated schema. Returns `$this`
-     * for already-populated schemas.
+     * When this member has `targetClass` set but no inline members, calls `targetClass::schema()`
+     * to fetch the populated schema. Returns `$this` for already-populated schemas.
+     *
+     * @return self Resolved schema, `$this` when already populated, otherwise
+     *              `targetClass::schema()`.
      */
     public function resolveTarget(): self
     {
@@ -235,10 +272,14 @@ final class Schema
     }
 
     /**
-     * Lazily-computed extension data for `$key`.
+     * Return lazily-computed extension data for `$key`.
      *
-     * The key carries its own provider. Computed on first access, then
-     * cached. Null results are cached correctly.
+     * The key carries its own provider. Computed on first access, then cached. Null results are
+     * cached correctly.
+     *
+     * @param SchemaExtensionKey $key Extension key identifying the provider that supplies the data.
+     *
+     * @return mixed Provider-computed extension data. May be null.
      */
     public function getExtension(SchemaExtensionKey $key): mixed
     {
@@ -246,12 +287,14 @@ final class Schema
     }
 
     /**
-     * Returns a new Schema containing only the members at `$indices`.
+     * Return a new Schema containing only the members at `$indices`.
      *
-     * The protocol layer uses this to build a body-only schema that
-     * excludes HTTP-bound members.
+     * The protocol layer uses this to build a body-only schema that excludes HTTP-bound members.
      *
-     * @param list<int> $indices Member indices to keep
+     * @param list<int> $indices Member indices to keep.
+     *
+     * @return self New Schema instance carrying only the requested members. Unknown indices are
+     *              silently skipped.
      */
     public function withMembers(array $indices): self
     {
