@@ -19,6 +19,11 @@ use Smithy\Core\Serde\ShapeType;
  */
 final class LongDocument extends IntegerDocument
 {
+    /**
+     * Return the document type.
+     *
+     * @return ShapeType Long document type.
+     */
     public function type(): ShapeType
     {
         return ShapeType::Long;

@@ -26,6 +26,11 @@ use Smithy\Core\Serde\SerializableStructInterface;
  */
 trait SensitiveStringableTrait
 {
+    /**
+     * Render the struct in a redacted, deterministic string form.
+     *
+     * @return string Redacted string form of the struct.
+     */
     public function __toString(): string
     {
         if (!$this instanceof SerializableStructInterface) {

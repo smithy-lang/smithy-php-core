@@ -17,11 +17,11 @@ use Smithy\Core\Shape\Document\DocumentInterface;
  * Generated shapes call the typed `serializeXxx()` method for each non-null member. The shape knows
  * the member type at codegen time, so there is no runtime type dispatch.
  *
- * Methods appear in the same order as their target case on {@see ShapeType}. Enum and IntEnum share
- * `serializeString` and `serializeInteger` respectively, the service-metadata cases (`Operation`,
- * `Service`, `Resource`) have no wire representation and no method here. The `beginStruct` /
- * `endStruct` pair sits alongside `serializeStruct` because it operates on the same struct-frame
- * concept.
+ * Methods appear in the same order as their target case on {@see ShapeType}. Enum and IntEnum
+ * share `serializeString` and `serializeInteger` respectively. The service-metadata cases
+ * (`Operation`, `Service`, `Resource`) have no wire representation and no method here. The
+ * `beginStruct` / `endStruct` pair sits alongside `serializeStruct` because it operates on the
+ * same struct-frame concept.
  *
  * @see AbstractCodec for creating serializer instances.
  */
@@ -140,7 +140,12 @@ interface ShapeSerializerInterface
      *
      * @return void
      */
-    public function serializeList(Schema $schema, array $list, int $idx, ShapeType $memberType): void;
+    public function serializeList(
+        Schema $schema,
+        array $list,
+        int $idx,
+        ShapeType $memberType
+    ): void;
 
     /**
      * Serialize a map (ShapeType::Map) shape.
@@ -211,9 +216,8 @@ interface ShapeSerializerInterface
      * `serialize*()` method on this interface via its own `serialize()`. Codecs that do not model
      * documents (XML, query) reject document members per the Smithy spec.
      *
-     * A `null` value represents an absent member. The codec decides whether to emit a sentinel or
-     * skip the field. An explicit document-level null arrives as.
-     * {@see Smithy\Core\Shape\Document\NullDocument} instead.
+     * A `null` value remains `null`. Codecs decide whether that means an absent member or an
+     * explicit null token in the target wire format.
      *
      * @param Schema $schema Member schema for the field being written.
      * @param DocumentInterface|null $value Document value, or null for an absent member.
@@ -224,6 +228,6 @@ interface ShapeSerializerInterface
     public function serializeDocument(
         Schema $schema,
         ?DocumentInterface $value,
-        int $idx,
+        int $idx
     ): void;
 }

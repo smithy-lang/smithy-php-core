@@ -24,8 +24,9 @@ class ApiException extends \RuntimeException
     public function __construct(
         string $message = '',
         public readonly ErrorFault $fault = ErrorFault::Other,
-        ?\Throwable $previous = null,
-    ) {
+        ?\Throwable $previous = null
+    )
+    {
         parent::__construct($message, 0, $previous);
     }
 

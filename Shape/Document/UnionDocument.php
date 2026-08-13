@@ -21,19 +21,35 @@ use Smithy\Core\Shape\UnionInterface;
  */
 final class UnionDocument extends AbstractDocument
 {
+    /**
+     * Build a union document.
+     *
+     * @param UnionInterface $value Union payload.
+     * @param Schema|null $schema Schema to attach, or null to use the union schema.
+     */
     public function __construct(
         public readonly UnionInterface $value,
         ?Schema $schema = null
-    ) {
+    )
+    {
         parent::__construct($schema ?? $value::schema());
     }
 
+    /**
+     * Return the document type.
+     *
+     * @return ShapeType Union document type.
+     */
     public function type(): ShapeType
     {
         return ShapeType::Union;
     }
 
-    /** Dispatch into {@see ShapeSerializerInterface::serializeUnion()}. */
+    /**
+     * Dispatch into {@see ShapeSerializerInterface::serializeUnion()}.
+     *
+     * @return void
+     */
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeUnion(

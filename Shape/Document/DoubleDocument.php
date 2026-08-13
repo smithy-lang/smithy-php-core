@@ -15,6 +15,11 @@ use Smithy\Core\Serde\ShapeType;
  */
 final class DoubleDocument extends FloatDocument
 {
+    /**
+     * Return the document type.
+     *
+     * @return ShapeType Double document type.
+     */
     public function type(): ShapeType
     {
         return ShapeType::Double;

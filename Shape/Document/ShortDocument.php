@@ -15,6 +15,11 @@ use Smithy\Core\Serde\ShapeType;
 final class ShortDocument extends IntegerDocument
 {
     /**
+     * Build a short document.
+     *
+     * @param int $value Short payload.
+     * @param Schema|null $schema Schema to attach, or null for an untyped document.
+     *
      * @throws IncompatibleDocumentTypeException When $value is outside the signed 16-bit range.
      */
     public function __construct(int $value, ?Schema $schema = null)
@@ -29,6 +34,11 @@ final class ShortDocument extends IntegerDocument
         parent::__construct($value, $schema);
     }
 
+    /**
+     * Return the document type.
+     *
+     * @return ShapeType Short document type.
+     */
     public function type(): ShapeType
     {
         return ShapeType::Short;

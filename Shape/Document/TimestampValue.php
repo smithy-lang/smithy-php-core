@@ -13,5 +13,10 @@ namespace Smithy\Core\Shape\Document;
  */
 final readonly class TimestampValue
 {
+    /**
+     * Build a timestamp marker wrapper.
+     *
+     * @param float $epochSeconds Timestamp payload in epoch seconds.
+     */
     public function __construct(public float $epochSeconds) {}
 }

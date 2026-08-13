@@ -23,8 +23,9 @@ final class SchemaExtensionKey
      * @return void
      */
     public function __construct(
-        public readonly SchemaExtensionProviderInterface $provider,
-    ) {
+        public readonly SchemaExtensionProviderInterface $provider
+    )
+    {
         $this->id = self::$nextId++;
     }
 }

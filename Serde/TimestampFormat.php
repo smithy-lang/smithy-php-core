@@ -94,7 +94,7 @@ enum TimestampFormat: int
                                 . \substr(
                                     $value,
                                     $dotPos + 1,
-                                    $len - $dotPos - 2,
+                                    $len - $dotPos - 2
                                 )
                             );
                     }
@@ -123,8 +123,8 @@ enum TimestampFormat: int
      * (~2.8k entries, opcache-free static). Codegen could emit these as a const instead to share
      * via opcache.
      *
-     * @return array<string, int> Map of "YYYY-MM" → epoch seconds at UTC midnight on the first of
-     *                       that month.
+     * @return array<string, int> Map of "YYYY-MM" → epoch seconds at UTC midnight on the first
+     *                            of that month.
      */
     private static function monthStartIso(): array
     {
@@ -139,8 +139,8 @@ enum TimestampFormat: int
      * Same data as {@see monthStartIso} keyed by month abbreviation and year (e.g. "Jan 2024") to
      * match the RFC 7231 wire form.
      *
-     * @return array<string, int> Map of "Mon YYYY" → epoch seconds at UTC midnight on the first of
-     *                       that month.
+     * @return array<string, int> Map of "Mon YYYY" → epoch seconds at UTC midnight on the first
+     *                            of that month.
      */
     private static function monthStartHd(): array
     {
@@ -150,7 +150,7 @@ enum TimestampFormat: int
             $names = [
                 1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
                 5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug',
-                9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec',
+                9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec'
             ];
             foreach (self::buildMonthTable('%04d %02d') as $k => $secs) {
                 $month = $names[(int) \substr($k, 5, 2)];
@@ -169,8 +169,8 @@ enum TimestampFormat: int
      * @param string $keyFmt `sprintf` format string that will be called with `(int $year, int
      *               $month)` and used as the table key.
      *
-     * @return array<string, int> Map of formatted key → epoch seconds at UTC midnight on the first
-     *                       of that month.
+     * @return array<string, int> Map of formatted key → epoch seconds at UTC midnight on the
+     *                            first of that month.
      */
     private static function buildMonthTable(string $keyFmt): array
     {

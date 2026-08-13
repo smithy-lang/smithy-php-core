@@ -85,8 +85,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return bool Boolean value.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a boolean-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a boolean-carrying subclass.
      */
     public function asBoolean(): bool
     {
@@ -95,8 +94,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return int Byte value.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a byte-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a byte-carrying subclass.
      */
     public function asByte(): int
     {
@@ -105,8 +103,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return int Short value.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a short-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a short-carrying subclass.
      */
     public function asShort(): int
     {
@@ -115,8 +112,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return int Integer value.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by an integer-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by an integer-carrying subclass.
      */
     public function asInteger(): int
     {
@@ -125,8 +121,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return int Long value.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a long-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a long-carrying subclass.
      */
     public function asLong(): int
     {
@@ -135,8 +130,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return float Float value.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a float-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a float-carrying subclass.
      */
     public function asFloat(): float
     {
@@ -145,8 +139,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return float Double value.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a double-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a double-carrying subclass.
      */
     public function asDouble(): float
     {
@@ -155,8 +148,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return BigInteger Arbitrary-precision integer wrapper.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a bigInteger-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a bigInteger-carrying subclass.
      */
     public function asBigInteger(): BigInteger
     {
@@ -165,8 +157,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return BigDecimal Arbitrary-precision decimal wrapper.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a bigDecimal-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a bigDecimal-carrying subclass.
      */
     public function asBigDecimal(): BigDecimal
     {
@@ -175,8 +166,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return string String value.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a string-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a string-carrying subclass.
      */
     public function asString(): string
     {
@@ -185,8 +175,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return string Raw blob bytes.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a blob-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a blob-carrying subclass.
      */
     public function asBlob(): string
     {
@@ -195,8 +184,7 @@ abstract class AbstractDocument implements DocumentInterface
 
     /**
      * @return float Epoch seconds.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by a timestamp-carrying
-     *                                           subclass.
+     * @throws IncompatibleDocumentTypeException Unless overridden by a timestamp-carrying subclass.
      */
     public function asTimestamp(): float
     {
@@ -204,8 +192,8 @@ abstract class AbstractDocument implements DocumentInterface
     }
 
     /**
-     * @return list<AbstractDocument> Ordered list of member documents.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by {@see ListDocument}.
+     * @return list<AbstractDocument|null> Ordered list of member documents.
+     * @throws IncompatibleDocumentTypeException Unless overridden by {@see ListDocument}.
      */
     public function asList(): array
     {
@@ -213,8 +201,8 @@ abstract class AbstractDocument implements DocumentInterface
     }
 
     /**
-     * @return array<string, AbstractDocument> Map from key to member document.
-     * @throws IncompatibleDocumentTypeException Always, unless overridden by {@see MapDocument}.
+     * @return array<string, AbstractDocument|null> Map from key to member document.
+     * @throws IncompatibleDocumentTypeException Unless overridden by {@see MapDocument}.
      */
     public function asMap(): array
     {
@@ -226,7 +214,7 @@ abstract class AbstractDocument implements DocumentInterface
      *
      * @param string $name Member name to look up.
      *
-     * @return AbstractDocument|null Member document, or null when absent.
+     * @return AbstractDocument|null Member document, or null when absent or explicitly null.
      * @throws IncompatibleDocumentTypeException When the document type has no named members
      *                                           (lists, scalars, blobs, timestamps).
      */
@@ -404,7 +392,7 @@ abstract class AbstractDocument implements DocumentInterface
     /**
      * Build a {@see ListDocument} from a list of documents.
      *
-     * @param list<AbstractDocument> $items Ordered member documents.
+     * @param list<AbstractDocument|null> $items Ordered member documents.
      * @param Schema|null $schema Schema to attach, or null for an untyped list.
      *
      * @return ListDocument Document wrapping the items.
@@ -417,7 +405,7 @@ abstract class AbstractDocument implements DocumentInterface
     /**
      * Build a {@see MapDocument} from a string-keyed map of documents.
      *
-     * @param array<string, AbstractDocument> $entries Key-to-document entries.
+     * @param array<string, AbstractDocument|null> $entries Key-to-document entries.
      * @param Schema|null $schema Schema to attach, or null for an untyped map.
      *
      * @return MapDocument Document wrapping the entries.
@@ -425,18 +413,6 @@ abstract class AbstractDocument implements DocumentInterface
     public static function ofMap(array $entries, ?Schema $schema = null): MapDocument
     {
         return new MapDocument($entries, $schema);
-    }
-
-    /**
-     * Build a {@see NullDocument}.
-     *
-     * @param Schema|null $schema Schema to attach, or null for an untyped null.
-     *
-     * @return NullDocument Document representing an absent value.
-     */
-    public static function ofNull(?Schema $schema = null): NullDocument
-    {
-        return new NullDocument($schema);
     }
 
     /**
@@ -448,7 +424,7 @@ abstract class AbstractDocument implements DocumentInterface
      *   int -> IntegerDocument
      *   float -> DoubleDocument
      *   string -> StringDocument
-     *   null -> NullDocument
+     *   null -> null
      *   list array -> ListDocument (children converted recursively)
      *   associative array -> MapDocument (values converted recursively)
      *   \stdClass -> MapDocument (object-like JSON object)
@@ -465,11 +441,11 @@ abstract class AbstractDocument implements DocumentInterface
      * @param Schema|null $schema Schema to attach to the root document, or null when untyped.
      *              Recursively-built children are always untyped.
      *
-     * @return AbstractDocument Document matching the payload's runtime type.
+     * @return AbstractDocument|null Document matching the payload's runtime type.
      * @throws \InvalidArgumentException When the payload's runtime type has no document mapping
      *                                   (resources, unrecognized objects).
      */
-    public static function ofObject(mixed $value, ?Schema $schema = null): AbstractDocument
+    public static function ofObject(mixed $value, ?Schema $schema = null): ?AbstractDocument
     {
         // gettype() gives one string per PHP runtime type. Object dispatches on class.
         switch (\gettype($value)) {
@@ -483,7 +459,7 @@ abstract class AbstractDocument implements DocumentInterface
             case 'string':
                 return new StringDocument($value, $schema);
             case 'NULL':
-                return new NullDocument($schema);
+                return null;
             case 'array':
                 return \array_is_list($value)
                     ? self::buildList($value, $schema)

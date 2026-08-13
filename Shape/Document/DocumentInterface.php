@@ -160,7 +160,7 @@ interface DocumentInterface extends SerializableShapeInterface
     /**
      * Return the document's payload as a list of documents.
      *
-     * @return list<self> Ordered list of member documents.
+     * @return list<self|null> Ordered list of member documents.
      * @throws IncompatibleDocumentTypeException When the document does not carry a list value.
      */
     public function asList(): array;
@@ -168,7 +168,7 @@ interface DocumentInterface extends SerializableShapeInterface
     /**
      * Return the document's payload as a string-keyed map of documents.
      *
-     * @return array<string, self> Map from key to member document.
+     * @return array<string, self|null> Map from key to member document.
      * @throws IncompatibleDocumentTypeException When the document does not carry a map value.
      */
     public function asMap(): array;
@@ -181,7 +181,7 @@ interface DocumentInterface extends SerializableShapeInterface
      *
      * @param string $name Member name to look up.
      *
-     * @return self|null Member document, or null when the member is absent.
+     * @return self|null Member document, or null when the member is absent or explicitly null.
      * @throws IncompatibleDocumentTypeException When the underlying document type has no named
      *                                           members.
      */

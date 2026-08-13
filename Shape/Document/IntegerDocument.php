@@ -16,23 +16,45 @@ use Smithy\Core\Serde\ShapeType;
  */
 class IntegerDocument extends AbstractDocument
 {
+    /**
+     * Build an integer document.
+     *
+     * @param int $value Integer payload.
+     * @param Schema|null $schema Schema to attach, or null for an untyped document.
+     */
     public function __construct(
         public readonly int $value,
         ?Schema $schema = null
-    ) {
+    )
+    {
         parent::__construct($schema);
     }
 
+    /**
+     * Return the document type.
+     *
+     * @return ShapeType Integer document type.
+     */
     public function type(): ShapeType
     {
         return ShapeType::Integer;
     }
 
+    /**
+     * Return the integer payload.
+     *
+     * @return int Integer payload.
+     */
     public function asInteger(): int
     {
         return $this->value;
     }
 
+    /**
+     * Return the value widened to long.
+     *
+     * @return int Long payload.
+     */
     public function asLong(): int
     {
         return $this->value;
@@ -68,7 +90,11 @@ class IntegerDocument extends AbstractDocument
         return $this->value;
     }
 
-    /** Dispatch into {@see ShapeSerializerInterface::serializeInteger()}. */
+    /**
+     * Dispatch into {@see ShapeSerializerInterface::serializeInteger()}.
+     *
+     * @return void
+     */
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeInteger(

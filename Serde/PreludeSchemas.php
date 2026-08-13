@@ -49,46 +49,46 @@ final class PreludeSchemas
 
         self::$STRING = new Schema(
             id: 'smithy.api#String',
-            type: ShapeType::String_,
+            type: ShapeType::String_
         );
         self::$INTEGER = new Schema(
             id: 'smithy.api#Integer',
-            type: ShapeType::Integer,
+            type: ShapeType::Integer
         );
         self::$LONG = new Schema(id: 'smithy.api#Long', type: ShapeType::Long);
         self::$SHORT = new Schema(
             id: 'smithy.api#Short',
-            type: ShapeType::Short,
+            type: ShapeType::Short
         );
         self::$BYTE = new Schema(id: 'smithy.api#Byte', type: ShapeType::Byte);
         self::$FLOAT = new Schema(
             id: 'smithy.api#Float',
-            type: ShapeType::Float_,
+            type: ShapeType::Float_
         );
         self::$DOUBLE = new Schema(
             id: 'smithy.api#Double',
-            type: ShapeType::Double,
+            type: ShapeType::Double
         );
         self::$BOOLEAN = new Schema(
             id: 'smithy.api#Boolean',
-            type: ShapeType::Boolean,
+            type: ShapeType::Boolean
         );
         self::$BLOB = new Schema(id: 'smithy.api#Blob', type: ShapeType::Blob);
         self::$TIMESTAMP = new Schema(
             id: 'smithy.api#Timestamp',
-            type: ShapeType::Timestamp,
+            type: ShapeType::Timestamp
         );
         self::$BIG_INTEGER = new Schema(
             id: 'smithy.api#BigInteger',
-            type: ShapeType::BigInteger,
+            type: ShapeType::BigInteger
         );
         self::$BIG_DECIMAL = new Schema(
             id: 'smithy.api#BigDecimal',
-            type: ShapeType::BigDecimal,
+            type: ShapeType::BigDecimal
         );
         self::$DOCUMENT = new Schema(
             id: 'smithy.api#Document',
-            type: ShapeType::Document,
+            type: ShapeType::Document
         );
 
         self::$initialized = true;

@@ -21,19 +21,35 @@ use Smithy\Core\Serde\ShapeType;
  */
 final class StructDocument extends AbstractDocument
 {
+    /**
+     * Build a struct document.
+     *
+     * @param SerializableStructInterface $value Struct payload.
+     * @param Schema|null $schema Schema to attach, or null to use the struct schema.
+     */
     public function __construct(
         public readonly SerializableStructInterface $value,
         ?Schema $schema = null
-    ) {
+    )
+    {
         parent::__construct($schema ?? $value::schema());
     }
 
+    /**
+     * Return the document type.
+     *
+     * @return ShapeType Structure document type.
+     */
     public function type(): ShapeType
     {
         return ShapeType::Structure;
     }
 
-    /** Dispatch into {@see ShapeSerializerInterface::serializeStruct()}. */
+    /**
+     * Dispatch into {@see ShapeSerializerInterface::serializeStruct()}.
+     *
+     * @return void
+     */
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeStruct(

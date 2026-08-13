@@ -88,8 +88,9 @@ final class Schema
         public readonly ?Schema $mapKey = null,
         public readonly ?Schema $mapValue = null,
         private readonly array $traits = [],
-        public readonly ?string $targetClass = null,
-    ) {
+        public readonly ?string $targetClass = null
+    )
+    {
         $this->type = $type->value;
         foreach ($members as $member) {
             $this->membersByName[$member->memberName] = $member;
@@ -314,7 +315,7 @@ final class Schema
             listMember: $this->listMember,
             mapKey: $this->mapKey,
             mapValue: $this->mapValue,
-            traits: $this->traits,
+            traits: $this->traits
         );
     }
 }

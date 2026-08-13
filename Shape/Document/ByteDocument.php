@@ -15,6 +15,11 @@ use Smithy\Core\Serde\ShapeType;
 final class ByteDocument extends IntegerDocument
 {
     /**
+     * Build a byte document.
+     *
+     * @param int $value Byte payload.
+     * @param Schema|null $schema Schema to attach, or null for an untyped document.
+     *
      * @throws IncompatibleDocumentTypeException When $value is outside the signed 8-bit range.
      */
     public function __construct(int $value, ?Schema $schema = null)
@@ -28,6 +33,11 @@ final class ByteDocument extends IntegerDocument
         parent::__construct($value, $schema);
     }
 
+    /**
+     * Return the document type.
+     *
+     * @return ShapeType Byte document type.
+     */
     public function type(): ShapeType
     {
         return ShapeType::Byte;

@@ -13,24 +13,45 @@ use Smithy\Core\Serde\ShapeType;
  */
 class StringDocument extends AbstractDocument
 {
+    /**
+     * Build a string document.
+     *
+     * @param string $value String payload.
+     * @param Schema|null $schema Schema to attach, or null for an untyped document.
+     */
     public function __construct(
         public readonly string $value,
         ?Schema $schema = null
-    ) {
+    )
+    {
         parent::__construct($schema);
     }
 
+    /**
+     * Return the document type.
+     *
+     * @return ShapeType String document type.
+     */
     public function type(): ShapeType
     {
         return ShapeType::String_;
     }
 
+    /**
+     * Return the string payload.
+     *
+     * @return string String payload.
+     */
     public function asString(): string
     {
         return $this->value;
     }
 
-    /** Dispatch into {@see ShapeSerializerInterface::serializeString()}. */
+    /**
+     * Dispatch into {@see ShapeSerializerInterface::serializeString()}.
+     *
+     * @return void
+     */
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeString(

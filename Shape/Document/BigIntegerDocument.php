@@ -17,24 +17,45 @@ use Smithy\Core\Shape\BigInteger;
  */
 final class BigIntegerDocument extends AbstractDocument
 {
+    /**
+     * Build a bigInteger document.
+     *
+     * @param BigInteger $value Integer payload.
+     * @param Schema|null $schema Schema to attach, or null for an untyped document.
+     */
     public function __construct(
         public readonly BigInteger $value,
         ?Schema $schema = null
-    ) {
+    )
+    {
         parent::__construct($schema);
     }
 
+    /**
+     * Return the document type.
+     *
+     * @return ShapeType BigInteger document type.
+     */
     public function type(): ShapeType
     {
         return ShapeType::BigInteger;
     }
 
+    /**
+     * Return the wrapped integer.
+     *
+     * @return BigInteger Integer payload.
+     */
     public function asBigInteger(): BigInteger
     {
         return $this->value;
     }
 
-    /** Dispatch into {@see ShapeSerializerInterface::serializeBigInteger()}. */
+    /**
+     * Dispatch into {@see ShapeSerializerInterface::serializeBigInteger()}.
+     *
+     * @return void
+     */
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeBigInteger(

@@ -13,5 +13,10 @@ namespace Smithy\Core\Shape\Document;
  */
 final readonly class BlobValue
 {
+    /**
+     * Build a blob marker wrapper.
+     *
+     * @param string $bytes Raw blob bytes.
+     */
     public function __construct(public string $bytes) {}
 }
