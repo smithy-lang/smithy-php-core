@@ -43,6 +43,13 @@ final class Schema
     public const T_ERRORS = 18;
     public const T_IDEMPOTENCY_TOKEN = 19;
     public const T_SENSITIVE = 20;
+    public const T_HTTP_CHECKSUM_REQUIRED = 21;
+    public const T_REQUEST_COMPRESSION = 22;
+    public const T_ERROR = 23;
+    public const T_READ_ONLY = 24;
+    public const T_IDEMPOTENT = 25;
+    public const T_RETRYABLE = 26;
+    public const T_EC2_QUERY_NAME = 27;
 
     /** @var array<string, Schema> Member name => member Schema (for structures/unions) */
     private array $membersByName = [];

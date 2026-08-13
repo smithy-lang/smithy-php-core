@@ -30,10 +30,39 @@ final class PreludeSchemas
      */
     public static function for(ShapeType $type): Schema
     {
-        return self::$cache[$type->value] ??= new Schema(
-            id: 'smithy.api#' . self::shapeIdSegment($type),
-            type: $type
-        );
+        return self::$cache[$type->value] ??= self::create($type);
+    }
+
+    /**
+     * Build the prelude schema for the given data-model type.
+     *
+     * @param ShapeType $type Data-model type to build.
+     *
+     * @return Schema Prelude schema for the type.
+     */
+    private static function create(ShapeType $type): Schema
+    {
+        $id = 'smithy.api#' . self::shapeIdSegment($type);
+
+        return match ($type) {
+            ShapeType::List_ => new Schema(
+                id: $id,
+                type: $type,
+                listMember: self::for(ShapeType::Document),
+                traits: [Schema::T_SPARSE => true]
+            ),
+            ShapeType::Map => new Schema(
+                id: $id,
+                type: $type,
+                mapKey: self::for(ShapeType::String_),
+                mapValue: self::for(ShapeType::Document),
+                traits: [Schema::T_SPARSE => true]
+            ),
+            default => new Schema(
+                id: $id,
+                type: $type
+            )
+        };
     }
 
     /**
