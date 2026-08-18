@@ -14,6 +14,7 @@ namespace Smithy\Core\Serde;
 final class SchemaExtensionKey
 {
     private static int $nextId = 0;
+
     public readonly int $id;
 
     /**

@@ -15,9 +15,7 @@ namespace Smithy\Core\Serde;
 abstract class AbstractCodecSettings
 {
     public readonly ?string $serviceNamespace;
-
     public readonly TimestampFormat $defaultTimestampFormat;
-
     public readonly bool $honorTimestampFormatTrait;
 
     /**

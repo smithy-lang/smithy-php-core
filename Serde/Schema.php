@@ -53,13 +53,10 @@ final class Schema
 
     /** @var array<string, Schema> Member name => member Schema (for structures/unions) */
     private array $membersByName = [];
-
     /** @var array<int, Schema> Position index => member Schema */
     private array $membersByIndex = [];
-
     /** @var array<int, mixed> Lazily-computed extension data keyed by extension ID */
     private array $extensions = [];
-
     private int $memberCount;
 
     /**
