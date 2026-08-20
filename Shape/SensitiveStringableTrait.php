@@ -36,7 +36,7 @@ trait SensitiveStringableTrait
             return static::class;
         }
 
-        $schema = static::schema();
+        $schema = $this->getSchema();
         $parts = [];
         foreach ($schema->getMembers() as $memberName => $memberSchema) {
             $value = $this->getMemberValue($memberSchema);

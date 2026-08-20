@@ -17,6 +17,8 @@ namespace Smithy\Core\Shape;
  */
 trait FromMembersTrait
 {
+    use WithMemberValueTrait;
+
     /**
      * Build an instance from pre-hydrated positional member slots.
      *

@@ -21,13 +21,22 @@ use Smithy\Core\Serde\SerializableShapeInterface;
 interface UnionInterface extends SerializableShapeInterface
 {
     /**
-     * Return the schema describing the union's variants.
+     * Return the schema describing this union instance.
      *
-     * Implementations cache the {@see Schema} instance (lazy-static pattern).
+     * Generated implementations delegate to {@see schema()}, preserving
+     * their process-wide lazy-static cache. Runtime implementations may
+     * instead carry the schema on the instance.
      *
      * @return Schema Union shape schema.
      */
-    public static function schema(): Schema;
+    public function getSchema(): Schema;
+
+    /**
+     * Return the schema member index of the active variant.
+     *
+     * Unknown or unmodeled variants return -1.
+     */
+    public function getMemberIndex(): int;
 
     /**
      * Return the tag name of the active variant (the Smithy member name).

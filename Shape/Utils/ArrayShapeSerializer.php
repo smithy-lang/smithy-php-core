@@ -10,22 +10,21 @@ use Smithy\Core\Serde\ShapeType;
 use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
 use Smithy\Core\Shape\Document\AbstractDocument;
+use Smithy\Core\Shape\EnumInterface;
 use Smithy\Core\Shape\UnionInterface;
 
 /**
- * Schema-driven converter between generated shape objects and their V3-compatible associative
- * array form.
+ * Convert generated shape objects to and from V3-compatible arrays.
  *
- * `toArray()` walks `$shape::schema()->getMembersByIndex()` and writes the V3-equivalent array
- * (PascalCase wire keys, scalars passing through, structs and unions recursing, enums and
- * big-numerics unwrapping to their `->value`, lists and maps mapping element-wise).
+ * `toArray()` walks structure members or the active union variant. It
+ * recursively unwraps structures, unions, collections, enums, and big
+ * numbers.
  *
- * `fromArray()` takes a generated shape class name, resolves its schema through `::schema()`,
- * hydrates each present member into the matching PHP type, and named-args spreads the result into
- * `new $className(...)`.
+ * `fromArray()` resolves a generated structure or union schema, hydrates
+ * each present member, and constructs the matching generated shape.
  *
- * Wire keys are `Schema::$memberName` (PascalCase). Constructor argument names are the camelCase
- * property name (`lcfirst($memberName)`).
+ * Wire keys are modeled member names. Constructor arguments use camelCase
+ * property names.
  */
 final class ArrayShapeSerializer
 {
@@ -38,37 +37,19 @@ final class ArrayShapeSerializer
      */
     public static function toArray(SerializableStructInterface|UnionInterface $shape): array
     {
+        if ($shape instanceof UnionInterface) {
+            return self::unwrapUnion($shape, $shape->getSchema());
+        }
+
         $result = [];
-        foreach ($shape::schema()->getMembersByIndex() as $memberSchema) {
-            // Wire member name is PascalCase (e.g., `Status`). PHP property name is the camelCase
-            // form. Resolve both so the array round-trips on the wire while reading from the
-            // strict-typed property.
+        foreach ($shape->getSchema()->getMembersByIndex() as $memberSchema) {
             $name = $memberSchema->memberName;
-            $prop = \lcfirst($name);
-            // `isset()` (not `!== null`) so the check is safe when a property is uninitialized.
-            // Generated code may leave optional enum members uninitialized rather than null.
-            if (!isset($shape->{$prop})) {
+            $value = $shape->getMemberValue($memberSchema);
+            if ($value === null) {
                 continue;
             }
-            $value = $shape->{$prop};
 
-            $result[$name] = match ($memberSchema->type) {
-                ShapeType::Structure->value => self::toArray($value),
-                ShapeType::Union->value => [$value->tag() => $value->value()],
-                ShapeType::Enum->value,
-                ShapeType::IntEnum->value => $value->value,
-                ShapeType::BigInteger->value,
-                ShapeType::BigDecimal->value => $value->value,
-                ShapeType::List_->value => self::unwrapList(
-                    $value,
-                    $memberSchema->getListMember()
-                ),
-                ShapeType::Map->value => self::unwrapMap(
-                    $value,
-                    $memberSchema->getMapValue()
-                ),
-                default => $value
-            };
+            $result[$name] = self::unwrapValue($memberSchema, $value);
         }
 
         return $result;
@@ -79,7 +60,8 @@ final class ArrayShapeSerializer
      *
      * @param class-string<SerializableStructInterface|UnionInterface> $className Generated
      *        structure or union class.
-     * @param array<string, mixed> $data V3-shaped payload keyed by PascalCase wire member names.
+     * @param array<string, mixed> $data V3-shaped payload keyed by modeled
+     *        wire member names.
      *
      * @return SerializableStructInterface|UnionInterface Hydrated instance of `$className`.
      */
@@ -101,17 +83,18 @@ final class ArrayShapeSerializer
 
         /** @var Schema $schema */
         $schema = $className::schema();
+        if ($schema->type === ShapeType::Union->value) {
+            return self::fromUnionArray($className, $schema, $data);
+        }
+
         $args = [];
         foreach ($schema->getMembersByIndex() as $memberSchema) {
             $name = $memberSchema->memberName;
             if (!\array_key_exists($name, $data)) {
-                // Missing key: skip the argument entirely. PHP fills the constructor's parameter
-                // default for optional members. Required members raise TypeError at the call
-                // boundary, which is the spec-correct missing-required behavior.
+                // Skip missing keys so PHP applies optional parameter
+                // defaults and rejects missing required parameters.
                 continue;
             }
-            // Constructor argument names are camelCase (`lcfirst($memberName)`). Wire keys stay
-            // PascalCase.
             $args[\lcfirst($name)] = self::hydrateMember(
                 $memberSchema,
                 $data[$name]
@@ -119,6 +102,39 @@ final class ArrayShapeSerializer
         }
 
         return new $className(...$args);
+    }
+
+    /**
+     * Build a generated union instance from an associative array.
+     *
+     * @param class-string $className Generated union base class.
+     * @param Schema $schema Root union schema.
+     * @param array<string, mixed> $data V3 union payload with one active
+     *        variant key.
+     *
+     * @return object Hydrated union instance.
+     */
+    private static function fromUnionArray(
+        string $className,
+        Schema $schema,
+        array $data
+    ): object
+    {
+        $tag = \array_key_first($data);
+        if ($tag === null) {
+            return $className::create('__unknown', null);
+        }
+
+        $memberSchema = $schema->getMember((string) $tag);
+        $value = $data[$tag];
+        if ($memberSchema === null) {
+            return $className::create((string) $tag, $value);
+        }
+
+        return $className::create(
+            (string) $tag,
+            self::hydrateMember($memberSchema, $value)
+        );
     }
 
     /**
@@ -279,6 +295,65 @@ final class ArrayShapeSerializer
     }
 
     /**
+     * Normalize one value into the array form described by its schema.
+     *
+     * @param Schema $schema Schema describing the runtime value.
+     * @param mixed $value Runtime value to unwrap.
+     *
+     * @return mixed V3-compatible array payload fragment.
+     */
+    private static function unwrapValue(Schema $schema, mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return match ($schema->type) {
+            ShapeType::Structure->value => self::toArray($value),
+            ShapeType::Union->value => self::unwrapUnion($value, $schema),
+            ShapeType::Enum->value,
+            ShapeType::IntEnum->value => $value instanceof EnumInterface
+                ? $value->getValue()
+                : $value,
+            ShapeType::BigInteger->value,
+            ShapeType::BigDecimal->value => $value->value,
+            ShapeType::List_->value => self::unwrapList(
+                $value,
+                $schema->getListMember()
+            ),
+            ShapeType::Map->value => self::unwrapMap(
+                $value,
+                $schema->getMapValue()
+            ),
+            default => $value
+        };
+    }
+
+    /**
+     * Normalize a generated union into its single-entry associative array.
+     *
+     * @param UnionInterface $union Hydrated union variant.
+     * @param Schema $schema Root union schema.
+     *
+     * @return array<string, mixed> Single-entry V3-shaped union payload.
+     */
+    private static function unwrapUnion(
+        UnionInterface $union,
+        Schema $schema
+    ): array
+    {
+        $tag = $union->tag();
+        $value = $union->value();
+        $memberSchema = $schema->getMember($tag);
+
+        return [
+            $tag => $memberSchema === null
+                ? $value
+                : self::unwrapValue($memberSchema, $value)
+        ];
+    }
+
+    /**
      * @param array<int|string, mixed> $list Raw list items.
      * @param Schema|null $itemSchema Schema for the list's item type, or null when unknown.
      *
@@ -349,7 +424,7 @@ final class ArrayShapeSerializer
     }
 
     /**
-     * Element-wise unwrap shared by list and map paths. Preserves keys.
+     * Unwrap list or map values while preserving keys and sparse nulls.
      *
      * @param array<int|string, mixed> $items Elements to unwrap.
      * @param Schema $itemSchema Schema for the element type.
@@ -358,49 +433,11 @@ final class ArrayShapeSerializer
      */
     private static function unwrapElements(array $items, Schema $itemSchema): array
     {
-        $itemType = $itemSchema->type;
-        // Hoist the type check out of the loop. For pass-through element types (scalars, list or
-        // map without further nesting) we return the input unchanged. For struct, enum, or
-        // bignum we map element-wise.
-        switch ($itemType) {
-            case ShapeType::Structure->value:
-                $out = [];
-                foreach ($items as $k => $v) {
-                    // `@sparse` collections may carry nulls. Preserve them rather than
-                    // dispatching the unwrap and erroring on the typed-param signature.
-                    $out[$k] = $v === null ? null : self::toArray($v);
-                }
-
-                return $out;
-
-            case ShapeType::Union->value:
-                $out = [];
-                foreach ($items as $k => $v) {
-                    $out[$k] = $v === null ? null : [$v->tag() => $v->value()];
-                }
-
-                return $out;
-
-            case ShapeType::Enum->value:
-            case ShapeType::IntEnum->value:
-                $out = [];
-                foreach ($items as $k => $v) {
-                    $out[$k] = $v === null ? null : $v->value;
-                }
-
-                return $out;
-
-            case ShapeType::BigInteger->value:
-            case ShapeType::BigDecimal->value:
-                $out = [];
-                foreach ($items as $k => $v) {
-                    $out[$k] = $v === null ? null : $v->value;
-                }
-
-                return $out;
-
-            default:
-                return $items;
+        $out = [];
+        foreach ($items as $k => $v) {
+            $out[$k] = $v === null ? null : self::unwrapValue($itemSchema, $v);
         }
+
+        return $out;
     }
 }

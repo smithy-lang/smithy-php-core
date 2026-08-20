@@ -4,39 +4,44 @@ declare(strict_types=1);
 
 namespace Smithy\Core\Shape;
 
+use Smithy\Core\Serde\Schema;
+
 /**
- * Interface implemented by generated Smithy service metadata classes.
- *
- * Each Smithy service produces a class that carries the service name, shape ID, version, and the
- * list of all operations it exposes.
+ * Provide runtime service metadata.
  */
 interface ServiceInterface
 {
     /**
-     * Return the service name (e.g., "STS", "DynamoDB").
-     *
-     * @return string Service name.
+     * Return the service name, such as "STS" or "DynamoDB".
      */
-    public static function name(): string;
+    public function getName(): string;
 
     /**
      * Return the fully-qualified Smithy shape ID of the service.
-     *
-     * @return string Service shape ID.
      */
-    public static function id(): string;
+    public function getId(): string;
 
     /**
-     * Return the service version string.
-     *
-     * @return string Service version.
+     * Return the service version.
      */
-    public static function version(): string;
+    public function getVersion(): string;
 
     /**
-     * Return the list of all operation class names in this service.
-     *
-     * @return list<class-string<OperationInterface>> Operation class names.
+     * Return the schema for the service shape.
      */
-    public static function operations(): array;
+    public function getSchema(): Schema;
+
+    /**
+     * List every operation in this service.
+     *
+     * @return list<OperationInterface> Service operations.
+     */
+    public function getOperations(): array;
+
+    /**
+     * Resolve an operation by its modeled name.
+     *
+     * @return OperationInterface|null Operation metadata, or null when absent.
+     */
+    public function getOperation(string $name): ?OperationInterface;
 }

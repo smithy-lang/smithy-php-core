@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Smithy\Core\Shape\Document;
 
 use Smithy\Core\Serde\Schema;
+use Smithy\Core\Serde\SerializableStructInterface;
 use Smithy\Core\Serde\ShapeSerializerInterface;
 use Smithy\Core\Serde\ShapeType;
 use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
+use Smithy\Core\Shape\EnumInterface;
+use Smithy\Core\Shape\UnionInterface;
 
 /**
  * Base class for {@see DocumentInterface} implementations.
@@ -534,6 +537,138 @@ abstract class AbstractDocument implements DocumentInterface
                         . \get_debug_type($value)
                 );
         }
+    }
+
+    /**
+     * Build a document using a modeled schema to preserve Smithy types.
+     *
+     * @param Schema $schema Schema describing the value.
+     * @param mixed $value Runtime value.
+     *
+     * @return AbstractDocument|null Schema-backed document.
+     */
+    public static function fromSchemaValue(
+        Schema $schema,
+        mixed $value
+    ): ?AbstractDocument
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof StructDocument
+            && $schema->type === ShapeType::Structure->value
+        ) {
+            return $value->withSerializationSchema($schema);
+        }
+
+        if ($value instanceof UnionDocument
+            && $schema->type === ShapeType::Union->value
+        ) {
+            return $value->withSerializationSchema($schema);
+        }
+
+        if ($value instanceof AbstractDocument) {
+            return $value;
+        }
+
+        switch ($schema->type) {
+            case ShapeType::Boolean->value:
+                return self::fromBoolean((bool) $value, $schema);
+            case ShapeType::Byte->value:
+                return self::fromByte((int) $value, $schema);
+            case ShapeType::Short->value:
+                return self::fromShort((int) $value, $schema);
+            case ShapeType::Integer->value:
+                return self::fromInteger((int) $value, $schema);
+            case ShapeType::Long->value:
+                return self::fromLong((int) $value, $schema);
+            case ShapeType::Float_->value:
+                return self::fromFloat((float) $value, $schema);
+            case ShapeType::Double->value:
+                return self::fromDouble((float) $value, $schema);
+            case ShapeType::BigInteger->value:
+                return self::fromBigInteger(
+                    $value instanceof BigInteger
+                        ? $value
+                        : new BigInteger((string) $value),
+                    $schema
+                );
+            case ShapeType::BigDecimal->value:
+                return self::fromBigDecimal(
+                    $value instanceof BigDecimal
+                        ? $value
+                        : new BigDecimal((string) $value),
+                    $schema
+                );
+            case ShapeType::String_->value:
+            case ShapeType::Enum->value:
+                return self::fromString(
+                    $value instanceof EnumInterface
+                        ? (string) $value->getValue()
+                        : (string) $value,
+                    $schema
+                );
+            case ShapeType::Blob->value:
+                return self::fromBlob((string) $value, $schema);
+            case ShapeType::Timestamp->value:
+                return self::fromTimestamp((float) $value, $schema);
+            case ShapeType::IntEnum->value:
+                return self::fromInteger(
+                    $value instanceof EnumInterface
+                        ? (int) $value->getValue()
+                        : (int) $value,
+                    $schema
+                );
+            case ShapeType::Structure->value:
+                if ($value instanceof SerializableStructInterface) {
+                    return StructDocument::fromStruct($value, $schema);
+                }
+                if (\is_array($value)) {
+                    return StructDocument::fromMembers($schema, $value);
+                }
+                break;
+            case ShapeType::Union->value:
+                if ($value instanceof UnionInterface) {
+                    return UnionDocument::fromUnion($value, $schema);
+                }
+                break;
+            case ShapeType::List_->value:
+                if (\is_array($value)) {
+                    $items = [];
+                    $member = $schema->getListMember();
+                    foreach ($value as $item) {
+                        $items[] = $member === null
+                            ? self::fromValue($item)
+                            : self::fromSchemaValue($member, $item);
+                    }
+
+                    return self::fromList($items, $schema);
+                }
+                break;
+            case ShapeType::Map->value:
+                if (\is_array($value)) {
+                    $entries = [];
+                    $mapValue = $schema->getMapValue();
+                    foreach ($value as $key => $entry) {
+                        $entries[(string) $key] = $mapValue === null
+                            ? self::fromValue($entry)
+                            : self::fromSchemaValue($mapValue, $entry);
+                    }
+
+                    return self::fromMap($entries, $schema);
+                }
+                break;
+            case ShapeType::Document->value:
+                return self::fromValue($value, $schema);
+        }
+
+        throw new \InvalidArgumentException(
+            'Cannot build a '
+                . ShapeType::from($schema->type)->name
+                . ' document from '
+                . \get_debug_type($value)
+        );
     }
 
     /**

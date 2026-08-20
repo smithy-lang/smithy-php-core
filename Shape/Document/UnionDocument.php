@@ -10,29 +10,108 @@ use Smithy\Core\Serde\ShapeType;
 use Smithy\Core\Shape\UnionInterface;
 
 /**
- * Document wrapping a modeled union shape.
+ * Represent a modeled union with a schema-backed document.
  *
- * Used when a service round-trips a tagged union through a document member. Wraps the generated
- * union so codecs serialize it through the standard union path while user code continues to see a
- * document.
- *
- * `$this->schema` is never null on a `UnionDocument`. The constructor falls back to the wrapped
- * value's `::schema()` when no schema is passed, so `serialize()` reads the property directly.
+ * Runtime schemas use {@see create()} or {@see unknown()}.
  */
-final class UnionDocument extends AbstractDocument
+final class UnionDocument extends AbstractDocument implements UnionInterface
 {
+    private bool $documentResolved = false;
+    private ?AbstractDocument $document = null;
+
     /**
-     * Build a union document.
-     *
-     * @param UnionInterface $value Union payload.
-     * @param Schema|null $schema Schema to attach, or null to use the union schema.
+     * @param Schema $valueSchema Canonical union schema.
+     * @param string $tag Active variant tag.
+     * @param mixed $value Raw active variant value.
+     * @param Schema $serializationSchema Schema used at the parent
+     *        serialization boundary.
      */
-    public function __construct(
-        public readonly UnionInterface $value,
-        ?Schema $schema = null
+    private function __construct(
+        private readonly Schema $valueSchema,
+        private readonly string $tag,
+        private readonly mixed $value,
+        private readonly int $memberIndex,
+        Schema $serializationSchema
     )
     {
-        parent::__construct($schema ?? $value::schema());
+        parent::__construct($serializationSchema);
+    }
+
+    /**
+     * Build a union document from a known variant.
+     *
+     * @return self Schema-backed union document.
+     */
+    public static function create(
+        Schema $schema,
+        string $tag,
+        mixed $value
+    ): self
+    {
+        $valueSchema = $schema->resolveTarget();
+
+        return new self(
+            $valueSchema,
+            $tag,
+            $value,
+            $valueSchema->getMember($tag)?->memberIndex ?? -1,
+            $schema
+        );
+    }
+
+    /**
+     * Build a union document for an unknown variant.
+     *
+     * @return self Schema-backed union document.
+     */
+    public static function unknown(
+        Schema $schema,
+        string $tag,
+        mixed $value
+    ): self
+    {
+        return self::create($schema, $tag, $value);
+    }
+
+    /**
+     * Convert an existing modeled union into a document.
+     *
+     * @return self Schema-backed union document.
+     */
+    public static function fromUnion(
+        UnionInterface $value,
+        ?Schema $schema = null
+    ): self
+    {
+        $valueSchema = $value->getSchema();
+
+        return new self(
+            $valueSchema,
+            $value->tag(),
+            $value->value(),
+            $value->getMemberIndex(),
+            $schema ?? $valueSchema
+        );
+    }
+
+    /**
+     * Return this value with a different parent serialization schema.
+     *
+     * @return self Schema-backed union document.
+     */
+    public function withSerializationSchema(Schema $schema): self
+    {
+        if ($this->schema === $schema) {
+            return $this;
+        }
+
+        return new self(
+            $this->valueSchema,
+            $this->tag,
+            $this->value,
+            $this->memberIndex,
+            $schema
+        );
     }
 
     /**
@@ -46,15 +125,86 @@ final class UnionDocument extends AbstractDocument
     }
 
     /**
+     * Return the canonical union schema.
+     */
+    public function getSchema(): Schema
+    {
+        return $this->valueSchema;
+    }
+
+    /**
+     * Return the active variant's schema member index.
+     */
+    public function getMemberIndex(): int
+    {
+        return $this->memberIndex;
+    }
+
+    /**
+     * Return the active variant tag.
+     */
+    public function tag(): string
+    {
+        return $this->tag;
+    }
+
+    /**
+     * Return the raw active variant value.
+     */
+    public function value(): mixed
+    {
+        return $this->value;
+    }
+
+    /**
+     * Return the active variant as a schema-backed document.
+     *
+     * @return AbstractDocument|null Variant document, or null for another
+     *                               name.
+     */
+    public function getMember(string $name): ?AbstractDocument
+    {
+        if ($name !== $this->tag) {
+            return null;
+        }
+
+        if (!$this->documentResolved) {
+            $member = $this->valueSchema->getMember($this->tag);
+            $this->document = $member === null
+                ? AbstractDocument::fromValue($this->value)
+                : AbstractDocument::fromSchemaValue(
+                    $member,
+                    $this->value
+                );
+            $this->documentResolved = true;
+        }
+
+        return $this->document;
+    }
+
+    /**
+     * Return the active variant as a single-entry map.
+     *
+     * @return array<string, AbstractDocument|null> Active variant document.
+     */
+    public function asMap(): array
+    {
+        return [$this->tag => $this->getMember($this->tag)];
+    }
+
+    /**
      * Dispatch into {@see ShapeSerializerInterface::serializeUnion()}.
      *
      * @return void
      */
-    public function serialize(ShapeSerializerInterface $serializer, int $idx): void
+    public function serialize(
+        ShapeSerializerInterface $serializer,
+        int $idx
+    ): void
     {
         $serializer->serializeUnion(
             $this->schema,
-            $this->value,
+            $this,
             $idx
         );
     }

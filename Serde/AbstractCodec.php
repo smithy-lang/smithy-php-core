@@ -16,6 +16,21 @@ namespace Smithy\Core\Serde;
 abstract class AbstractCodec
 {
     /**
+     * Create the dense positional buffer used to deserialize a structure.
+     *
+     * Codecs with precomputed schema metadata should override this method
+     * and return their cached members template.
+     *
+     * @return array<int, mixed> Positional member values.
+     */
+    public function createMembersBuffer(Schema $schema): array
+    {
+        $memberCount = $schema->getMemberCount();
+
+        return $memberCount ? \array_fill(0, $memberCount, null) : [];
+    }
+
+    /**
      * Create a serializer for this codec's format.
      *
      * @return ShapeSerializerInterface Fresh serializer instance ready to receive `serializeXxx`

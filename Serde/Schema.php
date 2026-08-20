@@ -50,6 +50,7 @@ final class Schema
     public const T_IDEMPOTENT = 25;
     public const T_RETRYABLE = 26;
     public const T_EC2_QUERY_NAME = 27;
+    public const T_HTTP_CHECKSUM = 28;
 
     /** @var array<string, Schema> Member name => member Schema (for structures/unions) */
     private array $membersByName = [];
@@ -58,7 +59,6 @@ final class Schema
     /** @var array<int, mixed> Lazily-computed extension data keyed by extension ID */
     private array $extensions = [];
     private int $memberCount;
-
     /**
      * Stored as `ShapeType::$value` (int) so codec dispatch can switch on a literal-int
      * discriminant. The constructor unwraps a {@see ShapeType} case exactly once.
@@ -78,7 +78,9 @@ final class Schema
      * @param Schema|null $mapKey Schema for map key type.
      * @param Schema|null $mapValue Schema for map value type.
      * @param array<int, mixed> $traits Serde-relevant traits (int key => trait value).
-     * @param string|null $targetClass FQCN of the target shape class for recursive references.
+     * @param Schema|SchemaReference|null $target Runtime target for
+     *        model-derived references.
+     * @param string|null $targetClass FQCN of the generated target shape class.
      *
      * @return void
      */
@@ -92,6 +94,7 @@ final class Schema
         public readonly ?Schema $mapKey = null,
         public readonly ?Schema $mapValue = null,
         private readonly array $traits = [],
+        public readonly Schema|SchemaReference|null $target = null,
         public readonly ?string $targetClass = null
     )
     {
@@ -261,19 +264,38 @@ final class Schema
     /**
      * Resolve the target schema for recursive references.
      *
-     * When this member has `targetClass` set but no inline members, calls `targetClass::schema()`
-     * to fetch the populated schema. Returns `$this` for already-populated schemas.
+     * Runtime references resolve through their direct or lazy schema target.
+     * Generated references call `targetClass::schema()`. Returns `$this` for
+     * already-populated schemas.
      *
      * @return self Resolved schema, `$this` when already populated, otherwise
      *              `targetClass::schema()`.
      */
     public function resolveTarget(): self
     {
+        if ($this->target instanceof SchemaReference) {
+            return $this->target->resolve();
+        }
+
+        if ($this->target instanceof self) {
+            return $this->target;
+        }
+
         if ($this->targetClass !== null) {
             return ($this->targetClass)::schema();
         }
 
         return $this;
+    }
+
+    /**
+     * Return true when this schema can resolve to another schema.
+     *
+     * @return bool True for runtime or generated target references.
+     */
+    public function hasTarget(): bool
+    {
+        return $this->target !== null || $this->targetClass !== null;
     }
 
     /**
