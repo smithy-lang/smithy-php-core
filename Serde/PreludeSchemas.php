@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Smithy\Core\Serde;
 
+use Smithy\Core\Shape\ShapeType;
+
 /**
  * Singleton schemas for the `smithy.api#*` prelude types.
  *

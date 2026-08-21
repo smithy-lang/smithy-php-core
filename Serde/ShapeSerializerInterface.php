@@ -17,13 +17,13 @@ use Smithy\Core\Shape\Document\DocumentInterface;
  * Generated shapes call the typed `serializeXxx()` method for each non-null member. The shape knows
  * the member type at codegen time, so there is no runtime type dispatch.
  *
- * Methods appear in the same order as their target case on {@see ShapeType}. Enum and IntEnum
- * share `serializeString` and `serializeInteger` respectively. The service-metadata cases
- * (`Operation`, `Service`, `Resource`) have no wire representation and no method here. The
- * `beginStruct` / `endStruct` pair sits alongside `serializeStruct` because it operates on the
- * same struct-frame concept.
+ * Methods appear in the same order as their target case on
+ * {@see \Smithy\Core\Shape\ShapeType}. Enum and IntEnum share `serializeString` and
+ * `serializeInteger` respectively. The service-metadata cases (`Operation`, `Service`, `Resource`)
+ * have no wire representation and no method here. The `beginStruct` / `endStruct` pair sits
+ * alongside `serializeStruct` because it operates on the same struct-frame concept.
  *
- * @see AbstractCodec for creating serializer instances.
+ * @see \Smithy\Codec\AbstractCodec for creating serializer instances.
  */
 interface ShapeSerializerInterface
 {

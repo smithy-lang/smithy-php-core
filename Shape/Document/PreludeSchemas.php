@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Smithy\Core\Shape\Document;
 
 use Smithy\Core\Serde\Schema;
-use Smithy\Core\Serde\ShapeType;
+use Smithy\Core\Shape\ShapeType;
 
 /**
  * Lazy-initialized schemas for Smithy's prelude shapes (`smithy.api#String`,

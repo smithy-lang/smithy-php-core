@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Smithy\Core\Exception;
+namespace Smithy\Core\Shape\Exception;
 
+use Smithy\Core\Exception\ApiException;
+use Smithy\Core\Exception\ErrorFault;
 use Smithy\Core\Serde\Schema;
 use Smithy\Core\Serde\SerializableStructInterface;
 use Smithy\Core\Serde\ShapeSerializerInterface;

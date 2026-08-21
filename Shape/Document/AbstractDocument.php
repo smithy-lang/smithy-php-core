@@ -7,10 +7,11 @@ namespace Smithy\Core\Shape\Document;
 use Smithy\Core\Serde\Schema;
 use Smithy\Core\Serde\SerializableStructInterface;
 use Smithy\Core\Serde\ShapeSerializerInterface;
-use Smithy\Core\Serde\ShapeType;
+use Smithy\Core\Shape\ShapeType;
 use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
 use Smithy\Core\Shape\EnumInterface;
+use Smithy\Core\Shape\Exception\InvalidShapeValueException;
 use Smithy\Core\Shape\UnionInterface;
 
 /**
@@ -477,8 +478,8 @@ abstract class AbstractDocument implements DocumentInterface
      *              Recursively-built children are always untyped.
      *
      * @return AbstractDocument|null Document matching the payload's runtime type.
-     * @throws \InvalidArgumentException When the payload's runtime type has no document mapping
-     *                                   (resources, unrecognized objects).
+     * @throws InvalidShapeValueException When the payload's runtime type has no document mapping
+     *                                    (resources, unrecognized objects).
      */
     public static function fromValue(
         mixed $value,
@@ -525,14 +526,14 @@ abstract class AbstractDocument implements DocumentInterface
                         (array) $value,
                         $schema
                     ),
-                    default => throw new \InvalidArgumentException(
+                    default => throw new InvalidShapeValueException(
                         'Cannot build a document from value of class '
                             . $value::class
                     )
                 };
             default:
                 // resource, resource (closed), or unknown type.
-                throw new \InvalidArgumentException(
+                throw new InvalidShapeValueException(
                     'Cannot build a document from value of type '
                         . \get_debug_type($value)
                 );
@@ -663,7 +664,7 @@ abstract class AbstractDocument implements DocumentInterface
                 return self::fromValue($value, $schema);
         }
 
-        throw new \InvalidArgumentException(
+        throw new InvalidShapeValueException(
             'Cannot build a '
                 . ShapeType::from($schema->type)->name
                 . ' document from '

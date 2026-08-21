@@ -7,7 +7,7 @@ namespace Smithy\Core\Shape\Document;
 use Smithy\Core\Serde\Schema;
 use Smithy\Core\Serde\SerializableShapeInterface;
 use Smithy\Core\Serde\ShapeSerializerInterface;
-use Smithy\Core\Serde\ShapeType;
+use Smithy\Core\Shape\ShapeType;
 use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
 

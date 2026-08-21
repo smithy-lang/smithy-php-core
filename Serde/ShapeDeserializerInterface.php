@@ -11,7 +11,7 @@ namespace Smithy\Core\Serde;
  * value into a positional array by `memberIndex`. The caller pre-allocates the array and reads from
  * it by position after the call completes.
  *
- * @see AbstractCodec for creating deserializer instances.
+ * @see \Smithy\Codec\AbstractCodec for creating deserializer instances.
  */
 interface ShapeDeserializerInterface
 {

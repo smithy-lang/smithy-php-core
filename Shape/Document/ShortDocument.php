@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Smithy\Core\Shape\Document;
 
 use Smithy\Core\Serde\Schema;
-use Smithy\Core\Serde\ShapeType;
+use Smithy\Core\Shape\ShapeType;
 
 /**
  * Document holding a Smithy short value (16-bit integer).

@@ -6,11 +6,12 @@ namespace Smithy\Core\Shape\Utils;
 
 use Smithy\Core\Serde\Schema;
 use Smithy\Core\Serde\SerializableStructInterface;
-use Smithy\Core\Serde\ShapeType;
+use Smithy\Core\Shape\ShapeType;
 use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
 use Smithy\Core\Shape\Document\AbstractDocument;
 use Smithy\Core\Shape\EnumInterface;
+use Smithy\Core\Shape\Exception\InvalidShapeValueException;
 use Smithy\Core\Shape\UnionInterface;
 
 /**
@@ -70,7 +71,7 @@ final class ArrayShapeSerializer
         if (!\is_a($className, SerializableStructInterface::class, true)
             && !\is_a($className, UnionInterface::class, true)
         ) {
-            throw new \InvalidArgumentException(
+            throw new InvalidShapeValueException(
                 \sprintf(
                     'ArrayShapeSerializer::fromArray() expects a class implementing '
                     . '%s or %s; got %s.',
@@ -144,7 +145,7 @@ final class ArrayShapeSerializer
      * @param mixed $value Raw wire value.
      *
      * @return mixed Coerced value ready to pass to the constructor.
-     * @throws \InvalidArgumentException When a timestamp string cannot be parsed.
+     * @throws InvalidShapeValueException When a timestamp string cannot be parsed.
      */
     private static function hydrateMember(Schema $memberSchema, mixed $value): mixed
     {
@@ -276,7 +277,7 @@ final class ArrayShapeSerializer
      * @param string $value Raw timestamp string.
      *
      * @return int Parsed Unix timestamp.
-     * @throws \InvalidArgumentException When `$value` cannot be parsed by `strtotime()`.
+     * @throws InvalidShapeValueException When `$value` cannot be parsed by `strtotime()`.
      */
     private static function parseTimestampString(
         Schema $memberSchema,
@@ -289,7 +290,7 @@ final class ArrayShapeSerializer
         }
 
         $label = $memberSchema->memberName ?? $memberSchema->id;
-        throw new \InvalidArgumentException(
+        throw new InvalidShapeValueException(
             "Invalid timestamp value '{$value}' for schema '{$label}'."
         );
     }

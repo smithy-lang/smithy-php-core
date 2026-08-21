@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Smithy\Core\Serde;
+namespace Smithy\Core\Shape;
 
 /**
  * Smithy shape types.
  *
- * Int-backed so {@see Schema::$type} (which stores `$type->value`) can be compared with literal-int
- * `case` arms in serializer and deserializer dispatch. Opcache lowers that to a packed jump table
- * (`ZEND_SWITCH_LONG`) rather than a chain of strict-equality opcodes.
+ * Int-backed so {@see \Smithy\Core\Serde\Schema::$type} can be compared with
+ * literal-int `case` arms in serializer and deserializer dispatch. Opcache
+ * lowers that to a packed jump table (`ZEND_SWITCH_LONG`) rather than a chain
+ * of strict-equality opcodes.
  *
  * Codegen emits these as `ShapeType::Foo` in generated Schema literals. The Schema constructor
  * unwraps to the int once at construction.

@@ -7,7 +7,7 @@ namespace Smithy\Core\Shape\Document;
 use Smithy\Core\Serde\Schema;
 use Smithy\Core\Serde\SerializableStructInterface;
 use Smithy\Core\Serde\ShapeSerializerInterface;
-use Smithy\Core\Serde\ShapeType;
+use Smithy\Core\Shape\ShapeType;
 
 /**
  * Represent a modeled structure with a schema-backed document.

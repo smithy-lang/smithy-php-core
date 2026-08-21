@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Smithy\Core\Serde;
 
+use Smithy\Core\Shape\ShapeType;
+
 /**
  * Runtime schema for a Smithy shape.
  *
@@ -12,7 +14,8 @@ namespace Smithy\Core\Serde;
  * reflection.
  *
  * `$type` is stored as `ShapeType::$value` (int) so codec dispatch can switch on a literal-int
- * discriminant. Pass a {@see ShapeType} case to the constructor. The unwrap happens once, there.
+ * discriminant. Pass a {@see \Smithy\Core\Shape\ShapeType} case to the constructor. The unwrap
+ * happens once, there.
  *
  * Traits are int-keyed. Access with `getTrait($key)` / `hasTrait($key)` using the `T_*` class
  * constants below. The packed storage layout is implementation detail.
@@ -61,7 +64,8 @@ final class Schema
     private int $memberCount;
     /**
      * Stored as `ShapeType::$value` (int) so codec dispatch can switch on a literal-int
-     * discriminant. The constructor unwraps a {@see ShapeType} case exactly once.
+     * discriminant. The constructor unwraps a {@see \Smithy\Core\Shape\ShapeType} case exactly
+     * once.
      *
      * @var int
      */

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Smithy\Core\Shape;
 
+use Smithy\Core\Shape\Exception\InvalidShapeValueException;
+
 /**
  * Runtime value type for Smithy `bigInteger` shapes.
  *
@@ -25,13 +27,13 @@ final readonly class BigInteger
      * @param string $value Wire representation of the integer. Must be an optional minus sign
      *               followed by one or more decimal digits.
      *
-     * @throws \InvalidArgumentException When `$value` does not match the integer subset of the JSON
-     *                                   number grammar.
+     * @throws InvalidShapeValueException When `$value` does not match the integer subset of the
+     *                                    JSON number grammar.
      */
     public function __construct(public string $value)
     {
         if (!\preg_match(self::VALUE_PATTERN, $value)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidShapeValueException(
                 "Invalid BigInteger value '{$value}': "
                     . 'expected an optional minus sign followed by digits.'
             );

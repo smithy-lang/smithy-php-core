@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Smithy\Core\Shape;
 
+use Smithy\Core\Shape\Exception\InvalidShapeValueException;
+
 /**
  * Runtime value type for Smithy `bigDecimal` shapes.
  *
@@ -27,12 +29,12 @@ final readonly class BigDecimal
      *               grammar (RFC 8259 §6): optional sign, integer part (either `0` or a non-zero
      *               digit followed by any digits), optional fractional part, optional exponent.
      *
-     * @throws \InvalidArgumentException When `$value` does not match the JSON number grammar.
+     * @throws InvalidShapeValueException When `$value` does not match the JSON number grammar.
      */
     public function __construct(public string $value)
     {
         if (!\preg_match(self::VALUE_PATTERN, $value)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidShapeValueException(
                 "Invalid BigDecimal value '{$value}': "
                     . 'expected a decimal number, optionally in exponent form.'
             );
