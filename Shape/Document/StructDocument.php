@@ -183,8 +183,58 @@ final class StructDocument extends AbstractDocument
     ): void
     {
         foreach ($this->valueSchema->getMembersByIndex() as $index => $member) {
-            $document = $this->getMemberDocument($member);
-            $document?->serialize($serializer, $index);
+            $value = $this->members[$index] ?? null;
+            if ($value === null) {
+                continue;
+            }
+
+            switch ($member->type) {
+                case ShapeType::Boolean->value:
+                    $serializer->serializeBoolean($member, $value, $index);
+                    break;
+                case ShapeType::Byte->value:
+                case ShapeType::Short->value:
+                case ShapeType::Integer->value:
+                case ShapeType::Long->value:
+                case ShapeType::IntEnum->value:
+                    $serializer->serializeInteger($member, $value, $index);
+                    break;
+                case ShapeType::Float_->value:
+                case ShapeType::Double->value:
+                    $serializer->serializeFloat($member, $value, $index);
+                    break;
+                case ShapeType::BigInteger->value:
+                    $serializer->serializeBigInteger($member, $value, $index);
+                    break;
+                case ShapeType::BigDecimal->value:
+                    $serializer->serializeBigDecimal($member, $value, $index);
+                    break;
+                case ShapeType::String_->value:
+                case ShapeType::Enum->value:
+                    $serializer->serializeString($member, $value, $index);
+                    break;
+                case ShapeType::Blob->value:
+                    $serializer->serializeBlob($member, $value, $index);
+                    break;
+                case ShapeType::Timestamp->value:
+                    $serializer->serializeTimestamp($member, $value, $index);
+                    break;
+                case ShapeType::List_->value:
+                    $serializer->serializeList($member, $value, $index);
+                    break;
+                case ShapeType::Map->value:
+                    $serializer->serializeMap($member, $value, $index);
+                    break;
+                case ShapeType::Structure->value:
+                    $serializer->serializeStruct($member, $value, $index);
+                    break;
+                case ShapeType::Union->value:
+                    $serializer->serializeUnion($member, $value, $index);
+                    break;
+                case ShapeType::Document->value:
+                    $serializer->serializeDocument($member, $value, $index);
+                    break;
+            }
         }
     }
 
