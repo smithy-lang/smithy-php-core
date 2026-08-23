@@ -59,6 +59,8 @@ final class Schema
     private array $membersByName = [];
     /** @var array<int, Schema> Position index => member Schema */
     private array $membersByIndex = [];
+    /** @var array<int, Schema> Members ordered safely for serialization. */
+    private array $serializationMembersByIndex;
     /** @var array<int, mixed> Lazily-computed extension data keyed by extension ID */
     private array $extensions = [];
     private int $memberCount;
@@ -167,6 +169,35 @@ final class Schema
     public function getMembersByIndex(): array
     {
         return $this->membersByIndex;
+    }
+
+    /**
+     * Return members in serialization order.
+     *
+     * XML attributes must precede child elements. Other schemas retain their
+     * modeled declaration order.
+     *
+     * @return array<int, Schema> Position index => member Schema.
+     */
+    public function getSerializationMembersByIndex(): array
+    {
+        if (isset($this->serializationMembersByIndex)) {
+            return $this->serializationMembersByIndex;
+        }
+
+        $attributes = [];
+        $elements = [];
+        foreach ($this->membersByIndex as $index => $member) {
+            if ($member->hasTrait(self::T_XML_ATTRIBUTE)) {
+                $attributes[$index] = $member;
+            } else {
+                $elements[$index] = $member;
+            }
+        }
+
+        return $this->serializationMembersByIndex = $attributes === []
+            ? $this->membersByIndex
+            : $attributes + $elements;
     }
 
     /**

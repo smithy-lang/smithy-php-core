@@ -182,7 +182,9 @@ final class StructDocument extends AbstractDocument
         ShapeSerializerInterface $serializer
     ): void
     {
-        foreach ($this->valueSchema->getMembersByIndex() as $index => $member) {
+        foreach ($this->valueSchema->getSerializationMembersByIndex()
+            as $index => $member
+        ) {
             $value = $this->members[$index] ?? null;
             if ($value === null) {
                 continue;
