@@ -73,8 +73,8 @@ final class ArrayShapeSerializer
         ) {
             throw new InvalidShapeValueException(
                 \sprintf(
-                    'ArrayShapeSerializer::fromArray() expects a class implementing '
-                    . '%s or %s; got %s.',
+                    'ArrayShapeSerializer::fromArray() expects a class '
+                    . 'implementing %s or %s; got %s.',
                     SerializableStructInterface::class,
                     UnionInterface::class,
                     $className
@@ -160,16 +160,16 @@ final class ArrayShapeSerializer
                 if ($class === null || !\is_array($value)) {
                     return $value;
                 }
-                // Nested structures and unions recurse back through the serializer using the
-                // target class named on the member schema.
+                // Nested structures and unions recurse through the serializer
+                // using the target class named on the member schema.
                 return self::fromArray($class, $value);
 
             case ShapeType::Enum->value:
             case ShapeType::IntEnum->value:
                 $class = $memberSchema->targetClass;
-                // Enum values may arrive as a wire scalar or as an instance of the generated enum
-                // class. The generated constructor already normalizes both forms, so we pass
-                // through either case unchanged.
+                // Enum values may arrive as a wire scalar or as an instance
+                // of the generated enum class. The generated constructor
+                // already normalizes both forms, so pass either case through.
 
                 return $class !== null && !($value instanceof $class)
                     ? $class::fromValue($value)
@@ -209,9 +209,9 @@ final class ArrayShapeSerializer
 
                 return $value;
 
-            // V3-compat string coercion. V3's `Validator::checkCanString` accepts
-            // string|int|float|stringable. Coerce here so the strict-typed `string $foo`
-            // constructor parameter does not TypeError on non-string scalars from V3-shaped input.
+            // V3's `Validator::checkCanString` accepts string, int, float,
+            // and stringable values. Coerce here so strict string parameters
+            // accept non-string scalars from V3-shaped input.
             case ShapeType::String_->value:
                 return match (\gettype($value)) {
                     'string' => $value,
@@ -222,9 +222,8 @@ final class ArrayShapeSerializer
                     default => $value
                 };
 
-            // V3-compat integer-family coercion. V3's `check_numeric` accepts anything
-            // `is_numeric` (numeric strings included). Coerce here so the strict-typed `int $foo`
-            // parameter accepts numeric strings, matching the V3 input contract.
+            // V3's `check_numeric` accepts any is_numeric value. Coerce here
+            // so strict integer parameters accept numeric strings.
             case ShapeType::Integer->value:
             case ShapeType::Long->value:
             case ShapeType::Short->value:
@@ -237,8 +236,8 @@ final class ArrayShapeSerializer
                     default => $value
                 };
 
-            // V3-compat blob coercion. Keep this to byte strings and stringable objects so plain
-            // blob members continue to model raw bytes rather than arbitrary scalar conversion.
+            // Keep blob coercion to byte strings and stringable objects so
+            // blob members continue to model raw bytes.
             case ShapeType::Blob->value:
                 return match (\gettype($value)) {
                     'string' => $value,
@@ -248,9 +247,8 @@ final class ArrayShapeSerializer
                     default => $value
                 };
 
-            // V3-compat document coercion. V3 callers pass raw arrays, stdClass, or scalars. Wrap
-            // them into the matching `AbstractDocument` subclass so the strict-typed
-            // `?AbstractDocument` parameter accepts them.
+            // V3 callers pass raw arrays, stdClass, or scalars. Wrap them
+            // into the matching document subclass.
             case ShapeType::Document->value:
                 return $value instanceof AbstractDocument
                     ? $value
@@ -309,9 +307,11 @@ final class ArrayShapeSerializer
             return null;
         }
 
+        $resolved = $schema->resolveTarget();
+
         return match ($schema->type) {
             ShapeType::Structure->value => self::toArray($value),
-            ShapeType::Union->value => self::unwrapUnion($value, $schema),
+            ShapeType::Union->value => self::unwrapUnion($value, $resolved),
             ShapeType::Enum->value,
             ShapeType::IntEnum->value => $value instanceof EnumInterface
                 ? $value->getValue()
@@ -320,11 +320,11 @@ final class ArrayShapeSerializer
             ShapeType::BigDecimal->value => $value->value,
             ShapeType::List_->value => self::unwrapList(
                 $value,
-                $schema->getListMember()
+                $resolved->getListMember()
             ),
             ShapeType::Map->value => self::unwrapMap(
                 $value,
-                $schema->getMapValue()
+                $resolved->getMapValue()
             ),
             default => $value
         };

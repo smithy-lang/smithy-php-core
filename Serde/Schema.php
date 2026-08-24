@@ -17,8 +17,8 @@ use Smithy\Core\Shape\ShapeType;
  * discriminant. Pass a {@see \Smithy\Core\Shape\ShapeType} case to the constructor. The unwrap
  * happens once, there.
  *
- * Traits are int-keyed. Access with `getTrait($key)` / `hasTrait($key)` using the `T_*` class
- * constants below. The packed storage layout is implementation detail.
+ * Traits are int-keyed on the serde hot path. Runtime model schemas also
+ * retain shape-ID keyed and direct-member trait views.
  *
  * Schemas MUST store their ShapeId and ShapeType (per SEP requirements) and MUST NOT reference
  * generated data-object classes.
@@ -55,6 +55,72 @@ final class Schema
     public const T_EC2_QUERY_NAME = 27;
     public const T_HTTP_CHECKSUM = 28;
 
+    /** @var array<string, int> */
+    private const TRAIT_KEYS_BY_ID = [
+        'smithy.api#xmlName' => self::T_XML_NAME,
+        'smithy.api#xmlNamespace' => self::T_XML_NAMESPACE,
+        'smithy.api#xmlAttribute' => self::T_XML_ATTRIBUTE,
+        'smithy.api#xmlFlattened' => self::T_XML_FLATTENED,
+        'smithy.api#timestampFormat' => self::T_TIMESTAMP_FORMAT,
+        'smithy.api#httpHeader' => self::T_HTTP_HEADER,
+        'smithy.api#httpLabel' => self::T_HTTP_LABEL,
+        'smithy.api#httpPayload' => self::T_HTTP_PAYLOAD,
+        'smithy.api#httpPrefixHeaders' => self::T_HTTP_PREFIX_HEADERS,
+        'smithy.api#httpQuery' => self::T_HTTP_QUERY,
+        'smithy.api#httpQueryParams' => self::T_HTTP_QUERY_PARAMS,
+        'smithy.api#httpResponseCode' => self::T_HTTP_RESPONSE_CODE,
+        'smithy.api#jsonName' => self::T_JSON_NAME,
+        'smithy.api#mediaType' => self::T_MEDIA_TYPE,
+        'smithy.api#required' => self::T_REQUIRED,
+        'smithy.api#sparse' => self::T_SPARSE,
+        'smithy.api#streaming' => self::T_STREAMING,
+        'smithy.api#http' => self::T_HTTP,
+        'smithy.api#idempotencyToken' => self::T_IDEMPOTENCY_TOKEN,
+        'smithy.api#sensitive' => self::T_SENSITIVE,
+        'smithy.api#httpChecksumRequired' =>
+            self::T_HTTP_CHECKSUM_REQUIRED,
+        'smithy.api#requestCompression' => self::T_REQUEST_COMPRESSION,
+        'smithy.api#error' => self::T_ERROR,
+        'smithy.api#readonly' => self::T_READ_ONLY,
+        'smithy.api#idempotent' => self::T_IDEMPOTENT,
+        'smithy.api#retryable' => self::T_RETRYABLE,
+        'aws.protocols#ec2QueryName' => self::T_EC2_QUERY_NAME,
+        'aws.protocols#httpChecksum' => self::T_HTTP_CHECKSUM
+    ];
+
+    /** @var array<int, string> */
+    private const TRAIT_IDS_BY_KEY = [
+        self::T_XML_NAME => 'smithy.api#xmlName',
+        self::T_XML_NAMESPACE => 'smithy.api#xmlNamespace',
+        self::T_XML_ATTRIBUTE => 'smithy.api#xmlAttribute',
+        self::T_XML_FLATTENED => 'smithy.api#xmlFlattened',
+        self::T_TIMESTAMP_FORMAT => 'smithy.api#timestampFormat',
+        self::T_HTTP_HEADER => 'smithy.api#httpHeader',
+        self::T_HTTP_LABEL => 'smithy.api#httpLabel',
+        self::T_HTTP_PAYLOAD => 'smithy.api#httpPayload',
+        self::T_HTTP_PREFIX_HEADERS => 'smithy.api#httpPrefixHeaders',
+        self::T_HTTP_QUERY => 'smithy.api#httpQuery',
+        self::T_HTTP_QUERY_PARAMS => 'smithy.api#httpQueryParams',
+        self::T_HTTP_RESPONSE_CODE => 'smithy.api#httpResponseCode',
+        self::T_JSON_NAME => 'smithy.api#jsonName',
+        self::T_MEDIA_TYPE => 'smithy.api#mediaType',
+        self::T_REQUIRED => 'smithy.api#required',
+        self::T_SPARSE => 'smithy.api#sparse',
+        self::T_STREAMING => 'smithy.api#streaming',
+        self::T_HTTP => 'smithy.api#http',
+        self::T_IDEMPOTENCY_TOKEN => 'smithy.api#idempotencyToken',
+        self::T_SENSITIVE => 'smithy.api#sensitive',
+        self::T_HTTP_CHECKSUM_REQUIRED =>
+            'smithy.api#httpChecksumRequired',
+        self::T_REQUEST_COMPRESSION => 'smithy.api#requestCompression',
+        self::T_ERROR => 'smithy.api#error',
+        self::T_READ_ONLY => 'smithy.api#readonly',
+        self::T_IDEMPOTENT => 'smithy.api#idempotent',
+        self::T_RETRYABLE => 'smithy.api#retryable',
+        self::T_EC2_QUERY_NAME => 'aws.protocols#ec2QueryName',
+        self::T_HTTP_CHECKSUM => 'aws.protocols#httpChecksum'
+    ];
+
     /** @var array<string, Schema> Member name => member Schema (for structures/unions) */
     private array $membersByName = [];
     /** @var array<int, Schema> Position index => member Schema */
@@ -84,9 +150,12 @@ final class Schema
      * @param Schema|null $mapKey Schema for map key type.
      * @param Schema|null $mapValue Schema for map value type.
      * @param array<int, mixed> $traits Serde-relevant traits (int key => trait value).
-     * @param Schema|SchemaReference|null $target Runtime target for
-     *        model-derived references.
+     * @param array<int, mixed> $directTraits Traits applied directly to this member.
+     * @param array<string, mixed> $traitsById Effective traits keyed by shape ID.
+     * @param array<string, mixed> $directTraitsById Direct traits keyed by shape ID.
+     * @param Schema|SchemaReference|null $target Runtime target for model-derived references.
      * @param string|null $targetClass FQCN of the generated target shape class.
+     * @param array<string, string|int> $enumValues Enum member name to modeled value.
      *
      * @return void
      */
@@ -100,8 +169,12 @@ final class Schema
         public readonly ?Schema $mapKey = null,
         public readonly ?Schema $mapValue = null,
         private readonly array $traits = [],
+        private readonly array $directTraits = [],
+        private readonly array $traitsById = [],
+        private readonly array $directTraitsById = [],
         public readonly Schema|SchemaReference|null $target = null,
-        public readonly ?string $targetClass = null
+        public readonly ?string $targetClass = null,
+        public readonly array $enumValues = []
     )
     {
         $this->type = $type->value;
@@ -265,6 +338,138 @@ final class Schema
     }
 
     /**
+     * Return true when an effective trait is present by shape ID.
+     */
+    public function hasTraitById(string $traitId): bool
+    {
+        if (isset($this->traitsById[$traitId])) {
+            return true;
+        }
+
+        $traitKey = self::TRAIT_KEYS_BY_ID[$traitId] ?? null;
+
+        return $traitKey !== null && isset($this->traits[$traitKey]);
+    }
+
+    /**
+     * Return an effective trait by shape ID.
+     */
+    public function getTraitById(string $traitId): mixed
+    {
+        if (\array_key_exists($traitId, $this->traitsById)) {
+            return $this->traitsById[$traitId];
+        }
+
+        $traitKey = self::TRAIT_KEYS_BY_ID[$traitId] ?? null;
+
+        return $traitKey === null
+            ? null
+            : ($this->traits[$traitKey] ?? null);
+    }
+
+    /**
+     * Return true when a trait was applied directly to this schema.
+     */
+    public function hasDirectTrait(int $traitKey): bool
+    {
+        if (isset($this->directTraits[$traitKey])) {
+            return true;
+        }
+
+        return !$this->isMember() && isset($this->traits[$traitKey]);
+    }
+
+    /**
+     * Return a trait applied directly to this schema.
+     */
+    public function getDirectTrait(int $traitKey): mixed
+    {
+        if (\array_key_exists($traitKey, $this->directTraits)) {
+            return $this->directTraits[$traitKey];
+        }
+
+        return $this->isMember()
+            ? null
+            : ($this->traits[$traitKey] ?? null);
+    }
+
+    /**
+     * Return a directly applied trait by shape ID.
+     */
+    public function getDirectTraitById(string $traitId): mixed
+    {
+        if (\array_key_exists($traitId, $this->directTraitsById)) {
+            return $this->directTraitsById[$traitId];
+        }
+
+        if ($this->isMember()) {
+            return null;
+        }
+
+        return $this->getTraitById($traitId);
+    }
+
+    /**
+     * Return true when a trait shape ID was applied directly.
+     */
+    public function hasDirectTraitById(string $traitId): bool
+    {
+        if (isset($this->directTraitsById[$traitId])) {
+            return true;
+        }
+
+        if (!$this->isMember()) {
+            return $this->hasTraitById($traitId);
+        }
+
+        $traitKey = self::TRAIT_KEYS_BY_ID[$traitId] ?? null;
+
+        return $traitKey !== null && isset(
+            $this->directTraits[$traitKey]
+        );
+    }
+
+    /**
+     * Return directly applied dense traits.
+     *
+     * @return array<int, mixed> Dense direct-trait table.
+     */
+    public function getDirectTraits(): array
+    {
+        return $this->isMember() ? $this->directTraits : $this->traits;
+    }
+
+    /**
+     * Return shape-ID keyed effective traits.
+     *
+     * @return array<string, mixed> Trait shape ID to value.
+     */
+    public function getTraitsById(): array
+    {
+        return $this->mergeDenseTraitsById(
+            $this->traits,
+            $this->traitsById
+        );
+    }
+
+    /**
+     * Return shape-ID keyed direct traits.
+     *
+     * @return array<string, mixed> Trait shape ID to value.
+     */
+    public function getDirectTraitsById(): array
+    {
+        if (!$this->isMember()) {
+            return $this->getTraitsById();
+        }
+
+        return $this->mergeDenseTraitsById(
+            $this->directTraits,
+            $this->directTraitsById
+        );
+    }
+
+    /**
      * Return the wire name for this member. Uses the `@jsonName` trait if present, otherwise the
      * member name.
      *
@@ -376,7 +581,40 @@ final class Schema
             listMember: $this->listMember,
             mapKey: $this->mapKey,
             mapValue: $this->mapValue,
-            traits: $this->traits
+            traits: $this->traits,
+            directTraits: $this->directTraits,
+            traitsById: $this->traitsById,
+            directTraitsById: $this->directTraitsById,
+            target: $this->target,
+            targetClass: $this->targetClass,
+            enumValues: $this->enumValues
         );
+    }
+
+    /**
+     * Merge dense built-in traits into a shape-ID keyed trait view.
+     *
+     * @param array<int, mixed> $dense Dense traits.
+     * @param array<string, mixed> $byId Existing shape-ID keyed traits.
+     *
+     * @return array<string, mixed> Trait shape ID to value.
+     */
+    private function mergeDenseTraitsById(
+        array $dense,
+        array $byId
+    ): array
+    {
+        foreach ($dense as $traitKey => $value) {
+            if ($value === null) {
+                continue;
+            }
+
+            $traitId = self::TRAIT_IDS_BY_KEY[$traitKey] ?? null;
+            if ($traitId !== null && !\array_key_exists($traitId, $byId)) {
+                $byId[$traitId] = $value;
+            }
+        }
+
+        return $byId;
     }
 }
