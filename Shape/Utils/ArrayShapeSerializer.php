@@ -309,11 +309,9 @@ final class ArrayShapeSerializer
             return null;
         }
 
-        $resolved = $schema->resolveTarget();
-
         return match ($schema->type) {
             ShapeType::Structure->value => self::toArray($value),
-            ShapeType::Union->value => self::unwrapUnion($value, $resolved),
+            ShapeType::Union->value => self::unwrapUnion($value, $schema),
             ShapeType::Enum->value,
             ShapeType::IntEnum->value => $value instanceof EnumInterface
                 ? $value->getValue()
@@ -322,11 +320,11 @@ final class ArrayShapeSerializer
             ShapeType::BigDecimal->value => $value->value,
             ShapeType::List_->value => self::unwrapList(
                 $value,
-                $resolved->getListMember()
+                $schema->getListMember()
             ),
             ShapeType::Map->value => self::unwrapMap(
                 $value,
-                $resolved->getMapValue()
+                $schema->getMapValue()
             ),
             default => $value
         };

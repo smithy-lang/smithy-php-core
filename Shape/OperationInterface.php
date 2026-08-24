@@ -58,13 +58,6 @@ interface OperationInterface
     public function getRuntimeIdentity(): string;
 
     /**
-     * Authentication scheme shape IDs effective for this operation.
-     *
-     * @return list<string> Scheme IDs in priority order.
-     */
-    public function getEffectiveAuthSchemes(): array;
-
-    /**
      * Return the schema for the operation itself.
      *
      * Carries operation-level traits (`@http`, `@errors`, `@auth`, etc.).
@@ -80,13 +73,6 @@ interface OperationInterface
      * Return the schema for the output response shape.
      */
     public function getOutputSchema(): Schema;
-
-    /**
-     * Return the service and operation errors effective for this operation.
-     *
-     * @return list<Schema> Modeled error schemas.
-     */
-    public function getErrorSchemas(): array;
 
     /**
      * Create an operation input from positional member values.
