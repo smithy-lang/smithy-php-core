@@ -83,9 +83,7 @@ final class Schema
         'smithy.api#error' => self::T_ERROR,
         'smithy.api#readonly' => self::T_READ_ONLY,
         'smithy.api#idempotent' => self::T_IDEMPOTENT,
-        'smithy.api#retryable' => self::T_RETRYABLE,
-        'aws.protocols#ec2QueryName' => self::T_EC2_QUERY_NAME,
-        'aws.protocols#httpChecksum' => self::T_HTTP_CHECKSUM
+        'smithy.api#retryable' => self::T_RETRYABLE
     ];
 
     /** @var array<int, string> */
@@ -116,9 +114,7 @@ final class Schema
         self::T_ERROR => 'smithy.api#error',
         self::T_READ_ONLY => 'smithy.api#readonly',
         self::T_IDEMPOTENT => 'smithy.api#idempotent',
-        self::T_RETRYABLE => 'smithy.api#retryable',
-        self::T_EC2_QUERY_NAME => 'aws.protocols#ec2QueryName',
-        self::T_HTTP_CHECKSUM => 'aws.protocols#httpChecksum'
+        self::T_RETRYABLE => 'smithy.api#retryable'
     ];
 
     /** @var array<string, Schema> Member name => member Schema (for structures/unions) */
@@ -140,7 +136,7 @@ final class Schema
     public readonly int $type;
 
     /**
-     * @param string $id Fully-qualified ShapeId (e.g., "com.amazonaws.sts#AssumeRoleRequest").
+     * @param string $id Fully-qualified ShapeId (e.g., "example.weather#GetForecastInput").
      * @param ShapeType $type Shape type. For members, this is the TARGET type.
      * @param string|null $memberName Member name for member schemas, null for root schemas.
      * @param int|null $memberIndex Position index for this member (used by switch-dispatched

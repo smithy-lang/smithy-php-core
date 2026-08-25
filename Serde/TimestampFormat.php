@@ -10,8 +10,8 @@ namespace Smithy\Core\Serde;
  * Used as a codegen-time hint to serializers so they can skip runtime format lookup from schema
  * traits/extensions.
  *
- * Cases are ordered from most to least common on the wire, epoch seconds is the AWS default, ISO
- * 8601 date-time is the second most common, and RFC 7231 http-date is used only for HTTP metadata.
+ * Cases are ordered from the most frequently used wire format to the
+ * least: epoch seconds, ISO 8601 date-time, then RFC 7231 HTTP-date.
  */
 enum TimestampFormat: int
 {
@@ -71,7 +71,7 @@ enum TimestampFormat: int
 
             case 1:
                 $len = \strlen($value);
-                // "2024-01-15T10:30:00Z" -- the AWS body-timestamp common case.
+                // Canonical 20-byte UTC form: "2024-01-15T10:30:00Z".
                 if ($len === 20) {
                     static $isoDays = [];
                     return ($isoDays[\substr($value, 0, 10)]
