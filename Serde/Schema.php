@@ -54,6 +54,7 @@ final class Schema
     public const T_RETRYABLE = 26;
     public const T_EC2_QUERY_NAME = 27;
     public const T_HTTP_CHECKSUM = 28;
+    public const T_PAGINATED = 29;
 
     /** @var array<string, int> */
     private const TRAIT_KEYS_BY_ID = [
@@ -83,7 +84,8 @@ final class Schema
         'smithy.api#error' => self::T_ERROR,
         'smithy.api#readonly' => self::T_READ_ONLY,
         'smithy.api#idempotent' => self::T_IDEMPOTENT,
-        'smithy.api#retryable' => self::T_RETRYABLE
+        'smithy.api#retryable' => self::T_RETRYABLE,
+        'smithy.api#paginated' => self::T_PAGINATED
     ];
 
     /** @var array<int, string> */
@@ -114,7 +116,8 @@ final class Schema
         self::T_ERROR => 'smithy.api#error',
         self::T_READ_ONLY => 'smithy.api#readonly',
         self::T_IDEMPOTENT => 'smithy.api#idempotent',
-        self::T_RETRYABLE => 'smithy.api#retryable'
+        self::T_RETRYABLE => 'smithy.api#retryable',
+        self::T_PAGINATED => 'smithy.api#paginated'
     ];
 
     /** @var array<string, Schema> Member name => member Schema (for structures/unions) */

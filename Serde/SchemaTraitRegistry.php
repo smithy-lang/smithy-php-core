@@ -36,7 +36,8 @@ final class SchemaTraitRegistry
         'smithy.api#error' => Schema::T_ERROR,
         'smithy.api#readonly' => Schema::T_READ_ONLY,
         'smithy.api#idempotent' => Schema::T_IDEMPOTENT,
-        'smithy.api#retryable' => Schema::T_RETRYABLE
+        'smithy.api#retryable' => Schema::T_RETRYABLE,
+        'smithy.api#paginated' => Schema::T_PAGINATED
     ];
 
     /**
