@@ -12,8 +12,9 @@ namespace Smithy\Core\Shape;
  * instances, lists, maps), then calls {@see fromMembers()}.
  *
  * The trait exists so codegen does not emit an identical one-line method on every generated
- * struct. The implementation is universally `return new static(...$members)` because the
- * deserializer pre-hydrates every slot to the target type.
+ * struct. The implementation is universally `return new static(...$members)` because codegen
+ * assigns schema member indices in constructor parameter order and the deserializer pre-hydrates
+ * every slot to the target type.
  */
 trait FromMembersTrait
 {
@@ -27,8 +28,7 @@ trait FromMembersTrait
      *           {@see \Smithy\Core\Shape\Utils\ArrayShapeSerializer::fromArray()} instead.
      *
      * @param array<int, mixed> $members Positional values indexed by member index. Ordering
-     *              follows the codegen constructor ordering: required members first, defaulted
-     *              members second, optional members last.
+     *              matches the generated constructor parameter order.
      *
      * @return static Hydrated shape instance.
      */
