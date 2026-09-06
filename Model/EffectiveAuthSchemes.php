@@ -48,7 +48,7 @@ final class EffectiveAuthSchemes
         }
 
         if ($schemeIds === []
-            || \array_key_exists(self::OPTIONAL_AUTH, $operationTraits)
+            || isset($operationTraits[self::OPTIONAL_AUTH])
         ) {
             $schemeIds[] = self::NO_AUTH;
         }
@@ -67,7 +67,7 @@ final class EffectiveAuthSchemes
         array $serviceTraits
     ): ?array
     {
-        if (!\array_key_exists(self::AUTH, $traits)) {
+        if (!isset($traits[self::AUTH])) {
             return null;
         }
 
@@ -79,7 +79,7 @@ final class EffectiveAuthSchemes
         $schemeIds = [];
         foreach ($auth as $schemeId) {
             if (\is_string($schemeId)
-                && \array_key_exists($schemeId, $serviceTraits)
+                && isset($serviceTraits[$schemeId])
             ) {
                 $schemeIds[] = $schemeId;
             }
@@ -106,10 +106,7 @@ final class EffectiveAuthSchemes
                 ? ($shape['traits'] ?? [])
                 : [];
             if (\is_array($traitTraits)
-                && \array_key_exists(
-                    self::AUTH_DEFINITION,
-                    $traitTraits
-                )
+                && isset($traitTraits[self::AUTH_DEFINITION])
             ) {
                 $schemeIds[] = $traitId;
             }
