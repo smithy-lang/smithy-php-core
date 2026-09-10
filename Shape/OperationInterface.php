@@ -50,6 +50,11 @@ interface OperationInterface
     public function getId(): string;
 
     /**
+     * Return the fully-qualified Smithy service shape ID.
+     */
+    public function getServiceId(): ?string;
+
+    /**
      * Return the stable identity used by per-operation runtime caches.
      *
      * Generated operations return their class name. Runtime operations

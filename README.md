@@ -33,15 +33,16 @@ The document hierarchy represents every Smithy data-model type. Empty lists
 and empty maps remain distinct values.
 
 ```php
-use Smithy\Core\Shape\Document\DocumentBuilder;
+use Smithy\Core\Shape\Document\AbstractDocument;
 
-$document = (new DocumentBuilder($schema))->build('Raleigh');
+$document = AbstractDocument::fromValue('Raleigh');
 
 echo $document->asString();
 ```
 
-`DocumentBuilder` coerces PHP values according to a schema. Runtime-loaded
-structures and unions use `StructDocument` and `UnionDocument`.
+Runtime-loaded structures and unions use `StructDocument` and
+`UnionDocument`. Dynamic clients validate caller values against operation
+schemas before creating these documents.
 
 ## Shape Contracts
 
