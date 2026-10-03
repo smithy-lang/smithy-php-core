@@ -20,8 +20,9 @@ use Smithy\Core\Shape\ShapeType;
  * Traits are int-keyed on the serde hot path. Runtime model schemas also
  * retain shape-ID keyed and direct-member trait views.
  *
- * Schemas MUST store their ShapeId and ShapeType (per SEP requirements) and MUST NOT reference
- * generated data-object classes.
+ * Schemas store their ShapeId and ShapeType. Generated schemas can also
+ * reference their generated data-object class through `$targetClass`; codecs
+ * use it to hydrate typed values and resolve lazy schema references.
  */
 final class Schema
 {
