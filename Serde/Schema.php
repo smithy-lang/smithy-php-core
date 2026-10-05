@@ -77,6 +77,7 @@ final class Schema
         'smithy.api#sparse' => self::T_SPARSE,
         'smithy.api#streaming' => self::T_STREAMING,
         'smithy.api#http' => self::T_HTTP,
+        'smithy.api#errors' => self::T_ERRORS,
         'smithy.api#idempotencyToken' => self::T_IDEMPOTENCY_TOKEN,
         'smithy.api#sensitive' => self::T_SENSITIVE,
         'smithy.api#httpChecksumRequired' =>
@@ -109,6 +110,7 @@ final class Schema
         self::T_SPARSE => 'smithy.api#sparse',
         self::T_STREAMING => 'smithy.api#streaming',
         self::T_HTTP => 'smithy.api#http',
+        self::T_ERRORS => 'smithy.api#errors',
         self::T_IDEMPOTENCY_TOKEN => 'smithy.api#idempotencyToken',
         self::T_SENSITIVE => 'smithy.api#sensitive',
         self::T_HTTP_CHECKSUM_REQUIRED =>

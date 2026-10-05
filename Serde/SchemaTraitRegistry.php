@@ -28,6 +28,7 @@ final class SchemaTraitRegistry
         'smithy.api#sparse' => Schema::T_SPARSE,
         'smithy.api#streaming' => Schema::T_STREAMING,
         'smithy.api#http' => Schema::T_HTTP,
+        'smithy.api#errors' => Schema::T_ERRORS,
         'smithy.api#idempotencyToken' => Schema::T_IDEMPOTENCY_TOKEN,
         'smithy.api#sensitive' => Schema::T_SENSITIVE,
         'smithy.api#httpChecksumRequired' =>
