@@ -9,6 +9,17 @@ namespace Smithy\Core\Model;
  */
 final class SmithyModel
 {
+    /**
+     * Matches URI-style schemes that PHP would interpret as stream wrappers.
+     */
+    private const STREAM_WRAPPER_PATH_PATTERN =
+        '/\A[A-Za-z][A-Za-z0-9+.-]*:\/\//D';
+
+    /**
+     * Matches Windows UNC and device namespace paths.
+     */
+    private const WINDOWS_UNC_OR_DEVICE_PATH_PATTERN = '~\A[\\\\/]{2}~D';
+
     private const RESOURCE_OPERATION_BINDINGS = [
         'create',
         'put',
@@ -59,15 +70,33 @@ final class SmithyModel
     ) {}
 
     /**
-     * Load a Smithy JSON AST file.
+     * Load a Smithy JSON AST from a local regular file.
      *
-     * @throws \RuntimeException When the file cannot be read.
+     * @throws \RuntimeException When the path is not a local regular file or
+     *                           cannot be read.
      */
     public static function fromFile(string $path): self
     {
+        if (\str_contains($path, "\0")
+            || \preg_match(self::STREAM_WRAPPER_PATH_PATTERN, $path) === 1
+            || (DIRECTORY_SEPARATOR === '\\'
+                && \preg_match(self::WINDOWS_UNC_OR_DEVICE_PATH_PATTERN, $path) === 1)
+        ) {
+            throw new \RuntimeException(
+                'Smithy model path must reference a local file.'
+            );
+        }
+
+        $resolvedPath = \realpath($path);
+        if ($resolvedPath === false || !\is_file($resolvedPath)) {
+            throw new \RuntimeException(
+                "Failed to read Smithy model file: {$path}"
+            );
+        }
+
         \set_error_handler(static fn(): bool => true);
         try {
-            $contents = \file_get_contents($path);
+            $contents = \file_get_contents($resolvedPath);
         } finally {
             \restore_error_handler();
         }

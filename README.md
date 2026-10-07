@@ -74,7 +74,9 @@ of `__debugInfo()`.
 
 `SmithyModel` loads a Smithy JSON AST. `SchemaConverter` turns model shapes
 into runtime schemas. `TypeRegistry` resolves runtime shapes and errors from
-those schemas.
+those schemas. `SmithyModel::fromFile()` accepts only local regular files; use
+`SmithyModel::fromJson()` for model contents supplied directly by callers. PHP
+stream-wrapper URIs are not accepted as model file paths.
 
 ## Numeric Types
 
