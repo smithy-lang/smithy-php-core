@@ -8,8 +8,7 @@ use Smithy\Core\Serde\Schema;
 use Smithy\Core\Serde\SerializableStructInterface;
 
 /**
- * Provides `__toString()` for Smithy structs so `print_r`, `var_dump`, and any string casts do not
- * leak sensitive fields.
+ * Provides safe string and debug representations for modeled values.
  *
  * The trait consults the shape's own schema. A struct redacts every member whose schema carries
  * `Schema::T_SENSITIVE`, either directly on the member (a member with `@sensitive`) or via
@@ -24,6 +23,22 @@ use Smithy\Core\Serde\SerializableStructInterface;
 trait SensitiveStringableTrait
 {
     /**
+     * Return a schema-aware representation for PHP debugging functions.
+     *
+     * @return array<string, mixed> Redacted debug representation.
+     */
+    public function __debugInfo(): array
+    {
+        if (!($this instanceof SerializableStructInterface)
+            && !($this instanceof UnionInterface)
+        ) {
+            return [];
+        }
+
+        return SensitiveDataRedactor::debugInfo($this);
+    }
+
+    /**
      * Render the struct in a redacted, deterministic string form.
      *
      * @return string Redacted string form of the struct.
@@ -37,6 +52,7 @@ trait SensitiveStringableTrait
         }
 
         $schema = $this->getSchema();
+        $redactAll = $schema->hasTrait(Schema::T_SENSITIVE);
         $parts = [];
         foreach ($schema->getMembers() as $memberName => $memberSchema) {
             $value = $this->getMemberValue($memberSchema);
@@ -46,7 +62,9 @@ trait SensitiveStringableTrait
 
             $parts[] = $memberName
                 . '='
-                . self::renderValue($value, $memberSchema);
+                . ($redactAll
+                    ? '"***REDACTED***"'
+                    : self::renderValue($value, $memberSchema));
         }
 
         $class = self::shortClass();

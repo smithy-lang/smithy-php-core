@@ -58,6 +58,18 @@ schemas before creating these documents.
 `ShapeSerializerInterface` and `ShapeDeserializerInterface` define the typed
 codec call surface.
 
+## Sensitive Debug Output
+
+Generated structures and unions that can contain `@sensitive` data provide
+schema-aware string and debug representations. String casts, `print_r()`, and
+`var_dump()` redact sensitive members, including values nested in collections
+and unions.
+
+This protection does not apply to `json_encode()`, `var_export()`, or PHP
+serialization. Do not pass modeled objects containing sensitive data to those
+functions or to logging systems that inspect public properties independently
+of `__debugInfo()`.
+
 ## Runtime Models
 
 `SmithyModel` loads a Smithy JSON AST. `SchemaConverter` turns model shapes
