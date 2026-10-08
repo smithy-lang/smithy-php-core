@@ -88,6 +88,10 @@ to the target wire format.
 
 This package depends only on PHP.
 
+## Design
+
+See [Core Runtime Design](../../docs/design/core/core-runtime-design.md).
+
 ## Contributing
 
 Run the component tests from the monorepo root:
