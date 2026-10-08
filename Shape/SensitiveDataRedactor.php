@@ -14,8 +14,12 @@ use Smithy\Core\Serde\SerializableStructInterface;
  */
 final class SensitiveDataRedactor
 {
+    /**
+     * Marker used in place of sensitive values.
+     */
+    public const REDACTED = '***REDACTED***';
+
     private const MAX_DEPTH = 64;
-    private const REDACTED = '***REDACTED***';
     private const MAX_DEPTH_REACHED = '<maximum debug depth reached>';
 
     public static function debugInfo(
