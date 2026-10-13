@@ -552,7 +552,11 @@ final class Schema
      */
     public function getExtension(SchemaExtensionKey $key): mixed
     {
-        return $this->extensions[$key->id] ??= $key->provider->provide($this);
+        if (!\array_key_exists($key->id, $this->extensions)) {
+            $this->extensions[$key->id] = $key->provider->provide($this);
+        }
+
+        return $this->extensions[$key->id];
     }
 
     /**
