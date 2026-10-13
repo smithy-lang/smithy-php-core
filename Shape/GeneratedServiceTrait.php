@@ -12,10 +12,14 @@ use Smithy\Core\Serde\Schema;
 trait GeneratedServiceTrait
 {
     private static ?ServiceInterface $serviceInstance = null;
-    private static ?Schema $serviceSchema = null;
 
     /** @var list<OperationInterface>|null */
     private static ?array $operationInstances = null;
+
+    /**
+     * Return the generated service schema.
+     */
+    abstract public static function schema(): Schema;
 
     /**
      * Return the shared generated service instance.
@@ -54,10 +58,7 @@ trait GeneratedServiceTrait
      */
     public function getSchema(): Schema
     {
-        return self::$serviceSchema ??= new Schema(
-            id: static::id(),
-            type: ShapeType::Service
-        );
+        return static::schema();
     }
 
     /**
