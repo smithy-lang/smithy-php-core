@@ -14,6 +14,12 @@ final class EffectiveAuthSchemes
     private const AUTH = 'smithy.api#auth';
     private const AUTH_DEFINITION = 'smithy.api#authDefinition';
     private const OPTIONAL_AUTH = 'smithy.api#optionalAuth';
+    private const PRELUDE_AUTH_SCHEMES = [
+        'smithy.api#httpApiKeyAuth' => true,
+        'smithy.api#httpBasicAuth' => true,
+        'smithy.api#httpBearerAuth' => true,
+        'smithy.api#httpDigestAuth' => true
+    ];
 
     private function __construct() {}
 
@@ -101,6 +107,11 @@ final class EffectiveAuthSchemes
     {
         $schemeIds = [];
         foreach ($serviceTraits as $traitId => $_) {
+            if (isset(self::PRELUDE_AUTH_SCHEMES[$traitId])) {
+                $schemeIds[] = $traitId;
+                continue;
+            }
+
             $shape = $shapes[$traitId] ?? null;
             $traitTraits = \is_array($shape)
                 ? ($shape['traits'] ?? [])
