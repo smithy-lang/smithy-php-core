@@ -39,6 +39,39 @@ trait SensitiveStringableTrait
     }
 
     /**
+     * Return a schema-aware representation for JSON serialization.
+     *
+     * @return array<string, mixed> Redacted JSON representation.
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->__debugInfo();
+    }
+
+    /**
+     * Return a schema-aware representation for PHP serialization.
+     *
+     * @return array<string, mixed> Redacted serialized representation.
+     */
+    public function __serialize(): array
+    {
+        return $this->__debugInfo();
+    }
+
+    /**
+     * Reject restoration from a redacted serialized representation.
+     *
+     * @param array<string, mixed> $_data
+     */
+    public function __unserialize(array $_data): void
+    {
+        throw new \LogicException(
+            'Sensitive modeled values cannot be restored from PHP '
+            . 'serialization.'
+        );
+    }
+
+    /**
      * Render the struct in a redacted, deterministic string form.
      *
      * @return string Redacted string form of the struct.

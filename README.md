@@ -58,17 +58,18 @@ schemas before creating these documents.
 `ShapeSerializerInterface` and `ShapeDeserializerInterface` define the typed
 codec call surface.
 
-## Sensitive Debug Output
+## Sensitive Diagnostic Output
 
 Generated structures and unions that can contain `@sensitive` data provide
-schema-aware string and debug representations. String casts, `print_r()`, and
-`var_dump()` redact sensitive members, including values nested in collections
-and unions.
+schema-aware diagnostic representations. String casts, `print_r()`,
+`var_dump()`, `json_encode()`, and PHP serialization redact sensitive members,
+including values nested in collections and unions. Redacted PHP serialization
+cannot be restored into a modeled value.
 
-This protection does not apply to `json_encode()`, `var_export()`, or PHP
-serialization. Do not pass modeled objects containing sensitive data to those
-functions or to logging systems that inspect public properties independently
-of `__debugInfo()`.
+`var_export()`, reflection, and direct property inspection bypass these hooks
+and can expose public sensitive members. Do not pass modeled objects containing
+sensitive data to those APIs or to logging systems that inspect properties
+directly.
 
 ## Runtime Models
 
