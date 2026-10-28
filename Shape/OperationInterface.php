@@ -32,10 +32,8 @@ use Smithy\Core\Serde\SerializableStructInterface;
  *     member-by-index lookup against the input or output schema.
  *
  * HTTP-binding operations also implement
- * {@see HttpBindingOperationInterface}, which adds a typed
- * `schemaExtension(): HttpOperationBindingExtension` accessor that bypasses
- * the schema's extension hash lookup. Non-HTTP operations (RPC, query) reach
- * any schema extensions through `schema()->getExtension($key)`.
+ * {@see HttpBindingOperationInterface}, which provides direct access to
+ * HTTP-specific schema metadata.
  */
 interface OperationInterface
 {
@@ -53,6 +51,17 @@ interface OperationInterface
      * Return the fully-qualified Smithy service shape ID.
      */
     public function getServiceId(): ?string;
+
+    /**
+     * Return the concrete exception class used for unmodeled service errors.
+     *
+     * Its public constructor must accept a string message, an
+     * {@see \Smithy\Core\Exception\ErrorFault}, and an optional nullable
+     * Throwable for exception chaining, in that order.
+     *
+     * @return class-string<\Smithy\Core\Exception\ApiException>
+     */
+    public function getServiceExceptionClass(): string;
 
     /**
      * Return the stable identity used by per-operation runtime caches.
