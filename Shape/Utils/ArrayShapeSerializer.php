@@ -24,11 +24,16 @@ use Smithy\Core\Shape\UnionInterface;
  * `fromArray()` resolves a generated structure or union schema, hydrates
  * each present member, and constructs the matching generated shape.
  *
- * Wire keys are modeled member names. Constructor arguments use camelCase
- * property names.
+ * Wire keys are modeled member names. Constructor arguments are resolved
+ * from schema member indexes so customized property names remain supported.
  */
 final class ArrayShapeSerializer
 {
+    /**
+     * @var array<class-string, array<int, string>>
+     */
+    private static array $constructorParameterNames = [];
+
     /**
      * Convert a generated structure or union into its V3-compatible associative array.
      *
@@ -88,21 +93,51 @@ final class ArrayShapeSerializer
             return self::fromUnionArray($className, $schema, $data);
         }
 
+        $parameterNames = self::constructorParameterNames($className);
         $args = [];
         foreach ($schema->getMembersByIndex() as $memberSchema) {
             $name = $memberSchema->memberName;
-            if (!\array_key_exists($name, $data)) {
-                // Skip missing keys so PHP applies optional parameter
-                // defaults and rejects missing required parameters.
+            $index = $memberSchema->memberIndex;
+            if ($index === null || !\array_key_exists($name, $data)) {
                 continue;
             }
-            $args[\lcfirst($name)] = self::hydrateMember(
+            $parameterName = $parameterNames[$index] ?? null;
+            if ($parameterName === null) {
+                throw new InvalidShapeValueException(
+                    \sprintf(
+                        'Unable to resolve constructor parameter %d for %s.',
+                        $index,
+                        $className
+                    )
+                );
+            }
+            $args[$parameterName] = self::hydrateMember(
                 $memberSchema,
                 $data[$name]
             );
         }
 
         return new $className(...$args);
+    }
+
+    /**
+     * @param class-string $className
+     * @return array<int, string>
+     */
+    private static function constructorParameterNames(
+        string $className
+    ): array {
+        if (isset(self::$constructorParameterNames[$className])) {
+            return self::$constructorParameterNames[$className];
+        }
+
+        $constructor = (new \ReflectionClass($className))->getConstructor();
+        $parameters = [];
+        foreach ($constructor?->getParameters() ?? [] as $index => $parameter) {
+            $parameters[$index] = $parameter->getName();
+        }
+
+        return self::$constructorParameterNames[$className] = $parameters;
     }
 
     /**

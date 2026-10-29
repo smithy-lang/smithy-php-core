@@ -7,9 +7,9 @@ namespace Smithy\Core\Shape;
 /**
  * Read-only {@see \ArrayAccess} implementation for typed value objects.
  *
- * Maps PascalCase wire names (e.g., `Credentials`, `AccessKeyId`) to camelCase readonly
- * properties on the implementing class through `lcfirst()`. Preserves SDK v3's
- * `$result['Credentials']` syntax while enforcing immutability.
+ * Resolves modeled wire names through the shape schema and its positional
+ * member accessor. Preserves SDK v3's `$result['Credentials']` syntax while
+ * allowing generated PHP property names to be customized.
  *
  * @implements \ArrayAccess<string, mixed>
  */
@@ -28,9 +28,9 @@ trait ReadonlyArrayAccessTrait
             return false;
         }
 
-        $prop = \lcfirst($offset);
+        $member = $this->getSchema()->getMember($offset);
 
-        return isset($this->{$prop});
+        return $member !== null && $this->getMemberValue($member) !== null;
     }
 
     /**
@@ -46,9 +46,9 @@ trait ReadonlyArrayAccessTrait
             return null;
         }
 
-        $prop = \lcfirst($offset);
+        $member = $this->getSchema()->getMember($offset);
 
-        return $this->{$prop} ?? null;
+        return $member === null ? null : $this->getMemberValue($member);
     }
 
     /**
