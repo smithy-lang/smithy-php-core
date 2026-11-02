@@ -161,6 +161,7 @@ final class Schema
      * @param Schema|SchemaReference|null $target Runtime target for model-derived references.
      * @param string|null $targetClass FQCN of the generated target shape class.
      * @param array<string, string|int> $enumValues Enum member name to modeled value.
+     * @param string|null $phpName Generated PHP name for this member.
      *
      * @return void
      */
@@ -179,7 +180,8 @@ final class Schema
         private readonly array $directTraitsById = [],
         public readonly Schema|SchemaReference|null $target = null,
         public readonly ?string $targetClass = null,
-        public readonly array $enumValues = []
+        public readonly array $enumValues = [],
+        public readonly ?string $phpName = null
     )
     {
         $this->type = $type->value;
@@ -596,7 +598,8 @@ final class Schema
             directTraitsById: $this->directTraitsById,
             target: $this->target,
             targetClass: $this->targetClass,
-            enumValues: $this->enumValues
+            enumValues: $this->enumValues,
+            phpName: $this->phpName
         );
     }
 
