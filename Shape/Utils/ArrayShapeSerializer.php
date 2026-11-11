@@ -15,6 +15,7 @@ use Smithy\Core\Shape\ShapeType;
 use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
 use Smithy\Core\Shape\Document\AbstractDocument;
+use Smithy\Core\Shape\Document\DocumentInterface;
 use Smithy\Core\Shape\EnumInterface;
 use Smithy\Core\Shape\Exception\InvalidShapeValueException;
 use Smithy\Core\Shape\UnionInterface;
@@ -23,8 +24,8 @@ use Smithy\Core\Shape\UnionInterface;
  * Convert generated shape objects to and from V3-compatible arrays.
  *
  * `toArray()` walks structure members or the active union variant. It
- * recursively unwraps structures, unions, collections, enums, and big
- * numbers.
+ * recursively unwraps structures, unions, collections, documents, enums,
+ * and big numbers.
  *
  * `fromArray()` resolves a generated structure or union schema, hydrates
  * each present member, and constructs the matching generated shape.
@@ -312,6 +313,7 @@ final class ArrayShapeSerializer
                 : $value,
             ShapeType::BigInteger->value,
             ShapeType::BigDecimal->value => $value->value,
+            ShapeType::Document->value => self::unwrapDocumentValue($value),
             ShapeType::List_->value => self::unwrapList(
                 $value,
                 $resolved->getListMember()
@@ -321,6 +323,80 @@ final class ArrayShapeSerializer
                 $resolved->getMapValue()
             ),
             default => $value
+        };
+    }
+
+    /**
+     * Recursively unwrap document objects in a document value.
+     *
+     * Raw scalar and array values are accepted for compatibility with
+     * hand-written shape implementations.
+     *
+     * @param mixed $value Document object or native PHP value.
+     *
+     * @return mixed Native PHP document value.
+     */
+    private static function unwrapDocumentValue(mixed $value): mixed
+    {
+        if ($value instanceof DocumentInterface) {
+            return self::unwrapDocument($value);
+        }
+
+        if (!\is_array($value)) {
+            return $value;
+        }
+
+        $out = [];
+        foreach ($value as $key => $entry) {
+            $out[$key] = self::unwrapDocumentValue($entry);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Recursively normalize a document into native PHP values.
+     *
+     * @param DocumentInterface $document Document value to unwrap.
+     *
+     * @return mixed Native PHP document value.
+     * @throws InvalidShapeValueException When the document carries a non-data-model type.
+     */
+    private static function unwrapDocument(DocumentInterface $document): mixed
+    {
+        return match ($document->type()) {
+            ShapeType::Boolean => $document->asBoolean(),
+            ShapeType::Byte => $document->asByte(),
+            ShapeType::Short => $document->asShort(),
+            ShapeType::Integer,
+            ShapeType::IntEnum => $document->asInteger(),
+            ShapeType::Long => $document->asLong(),
+            ShapeType::Float_ => $document->asFloat(),
+            ShapeType::Double => $document->asDouble(),
+            ShapeType::BigInteger => $document->asBigInteger()->value,
+            ShapeType::BigDecimal => $document->asBigDecimal()->value,
+            ShapeType::String_,
+            ShapeType::Enum => $document->asString(),
+            ShapeType::Blob => $document->asBlob(),
+            ShapeType::Timestamp => $document->asTimestamp(),
+            ShapeType::List_ => self::unwrapDocumentValue(
+                $document->asList()
+            ),
+            ShapeType::Structure => self::unwrapDocumentValue(
+                \array_filter(
+                    $document->asMap(),
+                    static fn (mixed $value): bool => $value !== null
+                )
+            ),
+            ShapeType::Map,
+            ShapeType::Union => self::unwrapDocumentValue(
+                $document->asMap()
+            ),
+            default => throw new InvalidShapeValueException(
+                'Cannot unwrap a document carrying '
+                    . $document->type()->name
+                    . '.'
+            )
         };
     }
 
