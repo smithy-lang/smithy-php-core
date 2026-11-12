@@ -446,14 +446,12 @@ final class SchemaConverter
         if (!isset($http['pathQueryString']) && $query !== null) {
             $fragments = [];
             foreach (\explode('&', $query) as $pair) {
-                [$name, $value] = \array_pad(
-                    \explode('=', $pair, 2),
-                    2,
-                    ''
-                );
-                $fragments[] = \rawurlencode($name)
-                    . '='
-                    . \rawurlencode($value);
+                $parts = \explode('=', $pair, 2);
+                $fragment = \rawurlencode($parts[0]);
+                if (isset($parts[1])) {
+                    $fragment .= '=' . \rawurlencode($parts[1]);
+                }
+                $fragments[] = $fragment;
             }
             $http['pathQueryString'] = \implode('&', $fragments);
         }
