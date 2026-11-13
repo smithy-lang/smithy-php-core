@@ -58,6 +58,16 @@ schemas before creating these documents.
 `ShapeSerializerInterface` and `ShapeDeserializerInterface` define the typed
 codec call surface.
 
+## Transport and Endpoint Contracts
+
+| Namespace | Responsibility |
+|---|---|
+| `Smithy\Core\Transport` | Transport, message exchange, and request/response contracts |
+| `Smithy\Core\Endpoint` | Resolved `Endpoint` and `EndpointAuthScheme` values |
+
+Protocols and transports depend on these contracts without depending on the
+client runtime. Endpoint resolvers live in `Smithy\Client\Endpoint`.
+
 ## Sensitive Diagnostic Output
 
 Generated structures and unions that can contain `@sensitive` data provide
