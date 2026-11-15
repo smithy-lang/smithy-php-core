@@ -1,0 +1,14 @@
+{
+    "name": "smithy/core",
+    "description": "Runtime schemas, shape contracts, document values, and model conversion for Smithy PHP.",
+    "type": "library",
+    "license": "Apache-2.0",
+    "require": {
+        "php": ">=8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Smithy\\Core\\": ""
+        }
+    }
+}
