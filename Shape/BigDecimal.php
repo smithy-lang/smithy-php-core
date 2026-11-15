@@ -27,7 +27,7 @@ final readonly class BigDecimal
      * fractional part, optional exponent. Mirrors the JSON number grammar from RFC 8259 §6, so
      * leading zeros on the integer part are rejected.
      */
-    private const VALUE_PATTERN = '/^-?(0|[1-9]\d*)(\.\d+)?([eE][-+]?\d+)?$/';
+    private const VALUE_PATTERN = '/^-?(0|[1-9]\d*)(\.\d+)?([eE][-+]?\d+)?$/D';
 
     /**
      * @param string $value Wire representation of the decimal number. Must match the JSON number

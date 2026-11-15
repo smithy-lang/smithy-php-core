@@ -26,7 +26,7 @@ final readonly class BigInteger
      * Optional sign followed by one or more decimal digits. The integer subset of RFC 8259 §6 (no
      * fractional part, no exponent).
      */
-    private const VALUE_PATTERN = '/^-?\d+$/';
+    private const VALUE_PATTERN = '/^-?\d+$/D';
 
     /**
      * @param string $value Wire representation of the integer. Must be an optional minus sign
