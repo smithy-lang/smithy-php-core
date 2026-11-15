@@ -74,7 +74,7 @@ final class MapDocument extends AbstractDocument
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeMap(
-            $this->schema ?? PreludeSchemas::for($this->type()),
+            $this->schema ?? PreludeSchemas::for(ShapeType::Map),
             $this->entries,
             $idx
         );

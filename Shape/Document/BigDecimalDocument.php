@@ -63,7 +63,7 @@ final class BigDecimalDocument extends AbstractDocument
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeBigDecimal(
-            $this->schema ?? PreludeSchemas::for($this->type()),
+            $this->schema ?? PreludeSchemas::for(ShapeType::BigDecimal),
             $this->value,
             $idx
         );

@@ -65,6 +65,11 @@ final class SmithyModel
 
     private const MIXIN_TRAIT = 'smithy.api#mixin';
 
+    /** @var array<string, array<string, array<string, mixed>>> Shape ID => effective members */
+    private array $membersCache = [];
+    /** @var array<string, array<string, mixed>> Shape ID => effective traits */
+    private array $traitsCache = [];
+
     /**
      * @param array<string, array<string, mixed>> $shapes Modeled shapes.
      * @param array<string, mixed> $metadata Model metadata.
@@ -242,7 +247,8 @@ final class SmithyModel
     {
         $visited = [];
 
-        return $this->resolveMembers($shapeId, $visited);
+        return $this->membersCache[$shapeId]
+            ??= $this->resolveMembers($shapeId, $visited);
     }
 
     /**
@@ -256,7 +262,8 @@ final class SmithyModel
     {
         $visited = [];
 
-        return $this->resolveTraits($shapeId, $visited);
+        return $this->traitsCache[$shapeId]
+            ??= $this->resolveTraits($shapeId, $visited);
     }
 
     /**

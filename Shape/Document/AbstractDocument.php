@@ -494,14 +494,14 @@ abstract class AbstractDocument implements DocumentInterface
         // gettype() gives one string per PHP runtime type. Object dispatches on class.
         switch (\gettype($value)) {
             case 'boolean':
-                return self::fromBoolean($value, $schema);
+                return new BooleanDocument($value, $schema);
             case 'integer':
-                return self::fromInteger($value, $schema);
+                return new IntegerDocument($value, $schema);
             case 'double':
                 // gettype() returns "double" for PHP floats.
-                return self::fromDouble($value, $schema);
+                return new DoubleDocument($value, $schema);
             case 'string':
-                return self::fromString($value, $schema);
+                return new StringDocument($value, $schema);
             case 'NULL':
                 return null;
             case 'array':
@@ -511,20 +511,20 @@ abstract class AbstractDocument implements DocumentInterface
             case 'object':
                 return match (true) {
                     $value instanceof AbstractDocument => $value,
-                    $value instanceof BigInteger => self::fromBigInteger(
+                    $value instanceof BigInteger => new BigIntegerDocument(
                         $value,
                         $schema
                     ),
-                    $value instanceof BigDecimal => self::fromBigDecimal(
+                    $value instanceof BigDecimal => new BigDecimalDocument(
                         $value,
                         $schema
                     ),
-                    $value instanceof BlobValue => self::fromBlob(
-                        $value,
+                    $value instanceof BlobValue => new BlobDocument(
+                        $value->bytes,
                         $schema
                     ),
-                    $value instanceof TimestampValue => self::fromTimestamp(
-                        $value,
+                    $value instanceof TimestampValue => new TimestampDocument(
+                        $value->epochSeconds,
                         $schema
                     ),
                     $value instanceof \stdClass => self::buildMap(
@@ -580,28 +580,28 @@ abstract class AbstractDocument implements DocumentInterface
 
         switch ($schema->type) {
             case ShapeType::Boolean->value:
-                return self::fromBoolean((bool) $value, $schema);
+                return new BooleanDocument((bool) $value, $schema);
             case ShapeType::Byte->value:
-                return self::fromByte((int) $value, $schema);
+                return new ByteDocument((int) $value, $schema);
             case ShapeType::Short->value:
-                return self::fromShort((int) $value, $schema);
+                return new ShortDocument((int) $value, $schema);
             case ShapeType::Integer->value:
-                return self::fromInteger((int) $value, $schema);
+                return new IntegerDocument((int) $value, $schema);
             case ShapeType::Long->value:
-                return self::fromLong((int) $value, $schema);
+                return new LongDocument((int) $value, $schema);
             case ShapeType::Float_->value:
-                return self::fromFloat((float) $value, $schema);
+                return new FloatDocument((float) $value, $schema);
             case ShapeType::Double->value:
-                return self::fromDouble((float) $value, $schema);
+                return new DoubleDocument((float) $value, $schema);
             case ShapeType::BigInteger->value:
-                return self::fromBigInteger(
+                return new BigIntegerDocument(
                     $value instanceof BigInteger
                         ? $value
                         : new BigInteger((string) $value),
                     $schema
                 );
             case ShapeType::BigDecimal->value:
-                return self::fromBigDecimal(
+                return new BigDecimalDocument(
                     $value instanceof BigDecimal
                         ? $value
                         : new BigDecimal((string) $value),
@@ -609,18 +609,18 @@ abstract class AbstractDocument implements DocumentInterface
                 );
             case ShapeType::String_->value:
             case ShapeType::Enum->value:
-                return self::fromString(
+                return new StringDocument(
                     $value instanceof EnumInterface
                         ? (string) $value->getValue()
                         : (string) $value,
                     $schema
                 );
             case ShapeType::Blob->value:
-                return self::fromBlob((string) $value, $schema);
+                return new BlobDocument((string) $value, $schema);
             case ShapeType::Timestamp->value:
-                return self::fromTimestamp((float) $value, $schema);
+                return new TimestampDocument((float) $value, $schema);
             case ShapeType::IntEnum->value:
-                return self::fromInteger(
+                return new IntegerDocument(
                     $value instanceof EnumInterface
                         ? (int) $value->getValue()
                         : (int) $value,
@@ -649,7 +649,7 @@ abstract class AbstractDocument implements DocumentInterface
                             : self::fromSchemaValue($member, $item);
                     }
 
-                    return self::fromList($items, $schema);
+                    return new ListDocument($items, $schema);
                 }
                 break;
             case ShapeType::Map->value:
@@ -662,7 +662,7 @@ abstract class AbstractDocument implements DocumentInterface
                             : self::fromSchemaValue($mapValue, $entry);
                     }
 
-                    return self::fromMap($entries, $schema);
+                    return new MapDocument($entries, $schema);
                 }
                 break;
             case ShapeType::Document->value:
@@ -692,7 +692,7 @@ abstract class AbstractDocument implements DocumentInterface
             $docs[] = self::fromValue($v);
         }
 
-        return self::fromList($docs, $schema);
+        return new ListDocument($docs, $schema);
     }
 
     /**
@@ -710,7 +710,7 @@ abstract class AbstractDocument implements DocumentInterface
             $docs[(string) $k] = self::fromValue($v);
         }
 
-        return self::fromMap($docs, $schema);
+        return new MapDocument($docs, $schema);
     }
 
     /**

@@ -130,10 +130,7 @@ final class SchemaTraitRegistry
         foreach ($traits as $traitId => $rawValue) {
             $definition = $this->definitions[$traitId] ?? null;
             if ($definition === null) {
-                $byId[$traitId] = new DynamicTraitValue(
-                    $traitId,
-                    $rawValue
-                );
+                $byId[$traitId] = $rawValue;
                 continue;
             }
 

@@ -82,18 +82,15 @@ final class DocumentException extends ApiException
      */
     public function withMemberValue(Schema $member, mixed $value): static
     {
-        $members = [];
-        foreach ($this->getSchema()->getMembersByIndex() as $index => $schema) {
-            $members[$index] = $this->getMemberValue($schema);
-        }
-        $members[$member->memberIndex] = $value;
-
-        return new self(
+        $copy = new self(
             $this->getSchema(),
-            $members,
+            [],
             $this->getMessage(),
             $this->fault,
             $this->getPrevious()
         );
+        $copy->document = $this->document->withMemberValue($member, $value);
+
+        return $copy;
     }
 }

@@ -324,7 +324,7 @@ final class Schema
      */
     public function hasTrait(int $traitKey): bool
     {
-        return isset($this->traits[$traitKey]);
+        return \array_key_exists($traitKey, $this->traits);
     }
 
     /**
@@ -354,13 +354,14 @@ final class Schema
      */
     public function hasTraitById(string $traitId): bool
     {
-        if (isset($this->traitsById[$traitId])) {
+        if (\array_key_exists($traitId, $this->traitsById)) {
             return true;
         }
 
         $traitKey = self::TRAIT_KEYS_BY_ID[$traitId] ?? null;
 
-        return $traitKey !== null && isset($this->traits[$traitKey]);
+        return $traitKey !== null
+            && \array_key_exists($traitKey, $this->traits);
     }
 
     /**
@@ -377,18 +378,6 @@ final class Schema
         return $traitKey === null
             ? null
             : ($this->traits[$traitKey] ?? null);
-    }
-
-    /**
-     * Return true when a trait was applied directly to this schema.
-     */
-    public function hasDirectTrait(int $traitKey): bool
-    {
-        if (isset($this->directTraits[$traitKey])) {
-            return true;
-        }
-
-        return !$this->isMember() && isset($this->traits[$traitKey]);
     }
 
     /**
@@ -422,36 +411,6 @@ final class Schema
     }
 
     /**
-     * Return true when a trait shape ID was applied directly.
-     */
-    public function hasDirectTraitById(string $traitId): bool
-    {
-        if (isset($this->directTraitsById[$traitId])) {
-            return true;
-        }
-
-        if (!$this->isMember()) {
-            return $this->hasTraitById($traitId);
-        }
-
-        $traitKey = self::TRAIT_KEYS_BY_ID[$traitId] ?? null;
-
-        return $traitKey !== null && isset(
-            $this->directTraits[$traitKey]
-        );
-    }
-
-    /**
-     * Return directly applied dense traits.
-     *
-     * @return array<int, mixed> Dense direct-trait table.
-     */
-    public function getDirectTraits(): array
-    {
-        return $this->isMember() ? $this->directTraits : $this->traits;
-    }
-
-    /**
      * Return shape-ID keyed effective traits.
      *
      * @return array<string, mixed> Trait shape ID to value.
@@ -462,35 +421,6 @@ final class Schema
             $this->traits,
             $this->traitsById
         );
-    }
-
-    /**
-     * Return shape-ID keyed direct traits.
-     *
-     * @return array<string, mixed> Trait shape ID to value.
-     */
-    public function getDirectTraitsById(): array
-    {
-        if (!$this->isMember()) {
-            return $this->getTraitsById();
-        }
-
-        return $this->mergeDenseTraitsById(
-            $this->directTraits,
-            $this->directTraitsById
-        );
-    }
-
-    /**
-     * Return the wire name for this member. Uses the `@jsonName` trait if present, otherwise the
-     * member name.
-     *
-     * @return string Wire name for this member, or empty string when the schema is a root shape
-     *                with no `@jsonName` trait.
-     */
-    public function getWireName(): string
-    {
-        return $this->traits[self::T_JSON_NAME] ?? $this->memberName ?? '';
     }
 
     /**
@@ -562,11 +492,7 @@ final class Schema
      */
     public function getExtension(SchemaExtensionKey $key): mixed
     {
-        if (!\array_key_exists($key->id, $this->extensions)) {
-            $this->extensions[$key->id] = $key->provider->provide($this);
-        }
-
-        return $this->extensions[$key->id];
+        return $this->extensions[$key->id] ?? $this->computeExtension($key);
     }
 
     /**
@@ -606,6 +532,18 @@ final class Schema
             enumValues: $this->enumValues,
             phpName: $this->phpName
         );
+    }
+
+    /**
+     * Compute and cache extension data on a miss, or return a cached null.
+     */
+    private function computeExtension(SchemaExtensionKey $key): mixed
+    {
+        if (\array_key_exists($key->id, $this->extensions)) {
+            return null;
+        }
+
+        return $this->extensions[$key->id] = $key->provider->provide($this);
     }
 
     /**

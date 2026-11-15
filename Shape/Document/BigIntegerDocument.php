@@ -64,7 +64,7 @@ final class BigIntegerDocument extends AbstractDocument
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeBigInteger(
-            $this->schema ?? PreludeSchemas::for($this->type()),
+            $this->schema ?? PreludeSchemas::for(ShapeType::BigInteger),
             $this->value,
             $idx
         );

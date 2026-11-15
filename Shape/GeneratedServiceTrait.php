@@ -20,6 +20,8 @@ trait GeneratedServiceTrait
 
     /** @var list<OperationInterface>|null */
     private static ?array $operationInstances = null;
+    /** @var array<string, OperationInterface>|null Operation name => instance */
+    private static ?array $operationsByName = null;
 
     /**
      * Return the generated service schema.
@@ -90,12 +92,13 @@ trait GeneratedServiceTrait
      */
     public function getOperation(string $name): ?OperationInterface
     {
-        foreach ($this->getOperations() as $operation) {
-            if ($operation->getName() === $name) {
-                return $operation;
+        if (self::$operationsByName === null) {
+            self::$operationsByName = [];
+            foreach ($this->getOperations() as $operation) {
+                self::$operationsByName[$operation->getName()] ??= $operation;
             }
         }
 
-        return null;
+        return self::$operationsByName[$name] ?? null;
     }
 }

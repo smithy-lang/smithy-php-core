@@ -60,7 +60,7 @@ class BlobDocument extends AbstractDocument
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeBlob(
-            $this->schema ?? PreludeSchemas::for($this->type()),
+            $this->schema ?? PreludeSchemas::for(ShapeType::Blob),
             $this->bytes,
             $idx
         );

@@ -65,7 +65,7 @@ class TimestampDocument extends AbstractDocument
     public function serialize(ShapeSerializerInterface $serializer, int $idx): void
     {
         $serializer->serializeTimestamp(
-            $this->schema ?? PreludeSchemas::for($this->type()),
+            $this->schema ?? PreludeSchemas::for(ShapeType::Timestamp),
             $this->epochSeconds,
             $idx
         );
