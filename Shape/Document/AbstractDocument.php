@@ -17,6 +17,7 @@ use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
 use Smithy\Core\Shape\EnumInterface;
 use Smithy\Core\Shape\Exception\InvalidShapeValueException;
+use Smithy\Core\Shape\Utils\ArrayShapeSerializer;
 use Smithy\Core\Shape\UnionInterface;
 
 /**
@@ -73,6 +74,22 @@ abstract class AbstractDocument implements DocumentInterface
     public function discriminator(): ?string
     {
         return $this->schema?->id;
+    }
+
+    /**
+     * Build a modeled shape from this document using the schema of the generated class.
+     *
+     * @template T of SerializableStructInterface|UnionInterface
+     *
+     * @param class-string<T> $class Generated structure or union class.
+     *
+     * @return T Hydrated shape instance.
+     * @throws IncompatibleDocumentTypeException When a document cannot be coerced to the member
+     *         type the schema declares.
+     */
+    public function asShape(string $class): object
+    {
+        return ArrayShapeSerializer::fromDocument($class, $this);
     }
 
     /**

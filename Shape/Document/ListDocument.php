@@ -21,15 +21,18 @@ use Smithy\Core\Shape\ShapeType;
  * matches the schema's `listMember`, but the data-model does not enforce
  * homogeneity at construction.
  */
-final class ListDocument extends AbstractDocument
+final class ListDocument extends AbstractDocument implements DocumentSettingsAwareInterface
 {
     /**
      * @param list<AbstractDocument|null> $items Ordered member documents.
      * @param Schema|null $schema Schema to attach, or null for an untyped list.
+     * @param DocumentSettingsInterface|null $settings Settings of the codec that read the
+     *                    document, or null for user-built documents.
      */
     public function __construct(
         public readonly array $items,
-        ?Schema $schema = null
+        ?Schema $schema = null,
+        private readonly ?DocumentSettingsInterface $settings = null
     )
     {
         parent::__construct($schema);
@@ -43,6 +46,16 @@ final class ListDocument extends AbstractDocument
     public function type(): ShapeType
     {
         return ShapeType::List_;
+    }
+
+    /**
+     * Return the settings of the codec that read this document.
+     *
+     * @return DocumentSettingsInterface|null Settings, or null for user-built documents.
+     */
+    public function getDocumentSettings(): ?DocumentSettingsInterface
+    {
+        return $this->settings;
     }
 
     /**

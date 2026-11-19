@@ -96,6 +96,16 @@ class IntegerDocument extends AbstractDocument
     }
 
     /**
+     * Return the value as epoch seconds.
+     *
+     * @return float Epoch seconds.
+     */
+    public function asTimestamp(): float
+    {
+        return (float) $this->value;
+    }
+
+    /**
      * Dispatch into {@see ShapeSerializerInterface::serializeInteger()}.
      *
      * @return void

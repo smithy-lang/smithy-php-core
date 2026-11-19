@@ -11,11 +11,15 @@ namespace Smithy\Core\Shape\Utils;
 
 use Smithy\Core\Serde\Schema;
 use Smithy\Core\Serde\SerializableStructInterface;
+use Smithy\Core\Serde\TimestampFormat;
 use Smithy\Core\Shape\ShapeType;
 use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
 use Smithy\Core\Shape\Document\AbstractDocument;
 use Smithy\Core\Shape\Document\DocumentInterface;
+use Smithy\Core\Shape\Document\DocumentSettingsAwareInterface;
+use Smithy\Core\Shape\Document\DocumentSettingsInterface;
+use Smithy\Core\Shape\Document\IncompatibleDocumentTypeException;
 use Smithy\Core\Shape\EnumInterface;
 use Smithy\Core\Shape\Exception\InvalidShapeValueException;
 use Smithy\Core\Shape\UnionInterface;
@@ -98,6 +102,280 @@ final class ArrayShapeSerializer
         }
 
         return new $className(...$args);
+    }
+
+    /**
+     * Build an instance of a generated shape from a document.
+     *
+     * Documents that carry codec settings ({@see DocumentSettingsAwareInterface}) read members by
+     * `jsonName` only when the settings use it, and parse string timestamps with the member's
+     * `timestampFormat` trait when the settings honor it, else the settings' default format.
+     * Documents without settings read members by `jsonName` first, then by member name, and
+     * timestamp members read through `asTimestamp()`. Blob members read through `asBlob()` and
+     * aggregate members recurse through the member schema.
+     *
+     * @template TShape of SerializableStructInterface|UnionInterface
+     *
+     * @param class-string<TShape> $className Generated structure or union class.
+     * @param DocumentInterface $document Document holding the shape's data.
+     *
+     * @return TShape Hydrated instance of `$className`.
+     * @throws IncompatibleDocumentTypeException When a document cannot be coerced to the member
+     *         type the schema declares.
+     */
+    public static function fromDocument(
+        string $className,
+        DocumentInterface $document
+    ): object
+    {
+        /** @var Schema $schema */
+        $schema = $className::schema();
+
+        return self::fromArray(
+            $className,
+            self::documentToArray($schema, $document, null)
+        );
+    }
+
+    /**
+     * Convert a structure or union document into member-name keyed values.
+     *
+     * @param Schema $schema Structure or union schema.
+     * @param DocumentInterface $document Document holding the shape's data.
+     * @param DocumentSettingsInterface|null $inherited Settings of the enclosing document.
+     *
+     * @return array<string, mixed> Values keyed by modeled member name.
+     */
+    private static function documentToArray(
+        Schema $schema,
+        DocumentInterface $document,
+        ?DocumentSettingsInterface $inherited
+    ): array
+    {
+        $settings = self::settingsOf($document) ?? $inherited;
+        $out = [];
+        if ($schema->type === ShapeType::Union->value) {
+            foreach ($document->asMap() as $wireName => $child) {
+                if ($wireName === '__type') {
+                    continue;
+                }
+                $member = self::findDocumentMember(
+                    $schema,
+                    (string) $wireName,
+                    $settings
+                );
+                if ($member === null) {
+                    return [(string) $wireName => $child === null
+                        ? null
+                        : self::unwrapDocument($child)];
+                }
+
+                return [$member->memberName => $child === null
+                    ? null
+                    : self::documentToValue($member, $child, $settings)];
+            }
+
+            return $out;
+        }
+
+        foreach ($schema->getMembersByIndex() as $member) {
+            $name = $member->memberName;
+            if ($name === null) {
+                continue;
+            }
+            $jsonName = $settings?->usesJsonName() === false
+                ? null
+                : $member->getTrait(Schema::T_JSON_NAME);
+            $child = (\is_string($jsonName) && $jsonName !== $name
+                    ? $document->getMember($jsonName)
+                    : null)
+                ?? $document->getMember($name);
+            if ($child !== null) {
+                $out[$name] = self::documentToValue($member, $child, $settings);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Read a numeric document as a float.
+     *
+     * @param DocumentInterface $document Integer-family or floating-point document.
+     *
+     * @return float Numeric value.
+     */
+    private static function numericToFloat(DocumentInterface $document): float
+    {
+        return match ($document->type()) {
+            ShapeType::Byte,
+            ShapeType::Short,
+            ShapeType::Integer,
+            ShapeType::Long => (float) $document->asLong(),
+            default => $document->asDouble()
+        };
+    }
+
+    /**
+     * Return the codec settings a document carries.
+     *
+     * @param DocumentInterface $document Document to inspect.
+     *
+     * @return DocumentSettingsInterface|null Settings, or null for user-built documents.
+     */
+    private static function settingsOf(DocumentInterface $document): ?DocumentSettingsInterface
+    {
+        return $document instanceof DocumentSettingsAwareInterface
+            ? $document->getDocumentSettings()
+            : null;
+    }
+
+    /**
+     * Read a timestamp member from a document.
+     *
+     * String documents parse with the member's `timestampFormat` trait when the settings honor
+     * it, else the settings' default format. All other documents read through `asTimestamp()`.
+     *
+     * @param Schema $member Timestamp member or item schema.
+     * @param DocumentInterface $document Document holding the value.
+     * @param DocumentSettingsInterface|null $settings Settings in effect, or null.
+     *
+     * @return float Epoch seconds.
+     * @throws IncompatibleDocumentTypeException When a string does not match the format.
+     */
+    private static function documentToTimestamp(
+        Schema $member,
+        DocumentInterface $document,
+        ?DocumentSettingsInterface $settings
+    ): float
+    {
+        if ($settings === null || $document->type() !== ShapeType::String_) {
+            return $document->asTimestamp();
+        }
+
+        $format = ($settings->usesTimestampFormatTrait()
+            ? TimestampFormat::fromTraitString(
+                $member->getTrait(Schema::T_TIMESTAMP_FORMAT)
+            )
+            : null
+        ) ?? $settings->getDefaultTimestampFormat();
+        $value = $document->asString();
+        if ($format === TimestampFormat::EpochSeconds && !\is_numeric($value)) {
+            throw new IncompatibleDocumentTypeException(
+                "Cannot parse '{$value}' as epoch-seconds"
+            );
+        }
+
+        try {
+            return $format->parse($value);
+        } catch (\InvalidArgumentException $e) {
+            throw new IncompatibleDocumentTypeException($e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Find the member of a union schema that a wire name refers to.
+     *
+     * @param Schema $schema Union schema.
+     * @param string $wireName `jsonName` or member name.
+     * @param DocumentSettingsInterface|null $settings Settings of the document, or null.
+     *
+     * @return Schema|null Matching member, or null when none matches.
+     */
+    private static function findDocumentMember(
+        Schema $schema,
+        string $wireName,
+        ?DocumentSettingsInterface $settings
+    ): ?Schema
+    {
+        $useJsonName = $settings?->usesJsonName() !== false;
+        foreach ($schema->getMembersByIndex() as $member) {
+            if ($member->memberName === $wireName
+                || ($useJsonName
+                    && $member->getTrait(Schema::T_JSON_NAME) === $wireName)
+            ) {
+                return $member;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Convert one document into the value its member schema describes.
+     *
+     * @param Schema $member Member or item schema.
+     * @param DocumentInterface $document Document holding the value.
+     * @param DocumentSettingsInterface|null $inherited Settings of the enclosing document.
+     *
+     * @return mixed Value ready for {@see hydrateMember()}.
+     */
+    private static function documentToValue(
+        Schema $member,
+        DocumentInterface $document,
+        ?DocumentSettingsInterface $inherited
+    ): mixed
+    {
+        $settings = self::settingsOf($document) ?? $inherited;
+        switch ($member->type) {
+            case ShapeType::Structure->value:
+            case ShapeType::Union->value:
+                return self::documentToArray(
+                    $member->resolveTarget(),
+                    $document,
+                    $settings
+                );
+            case ShapeType::List_->value:
+                $itemSchema = $member->getListMember();
+                $out = [];
+                foreach ($document->asList() as $item) {
+                    $out[] = $item === null
+                        ? null
+                        : ($itemSchema === null
+                            ? self::unwrapDocument($item)
+                            : self::documentToValue($itemSchema, $item, $settings));
+                }
+
+                return $out;
+            case ShapeType::Map->value:
+                $valueSchema = $member->getMapValue();
+                $out = [];
+                foreach ($document->asMap() as $key => $item) {
+                    $out[$key] = $item === null
+                        ? null
+                        : ($valueSchema === null
+                            ? self::unwrapDocument($item)
+                            : self::documentToValue($valueSchema, $item, $settings));
+                }
+
+                return $out;
+            case ShapeType::Document->value:
+                return $document;
+            case ShapeType::Blob->value:
+                return $document->asBlob();
+            case ShapeType::Timestamp->value:
+                return self::documentToTimestamp($member, $document, $settings);
+            case ShapeType::Boolean->value:
+                return $document->asBoolean();
+            case ShapeType::Byte->value:
+            case ShapeType::Short->value:
+            case ShapeType::Integer->value:
+            case ShapeType::Long->value:
+            case ShapeType::IntEnum->value:
+                return $document->asLong();
+            case ShapeType::Float_->value:
+            case ShapeType::Double->value:
+                return self::numericToFloat($document);
+            case ShapeType::BigInteger->value:
+                return $document->asBigInteger();
+            case ShapeType::BigDecimal->value:
+                return $document->asBigDecimal();
+            case ShapeType::String_->value:
+            case ShapeType::Enum->value:
+                return $document->asString();
+            default:
+                return self::unwrapDocument($document);
+        }
     }
 
     /**

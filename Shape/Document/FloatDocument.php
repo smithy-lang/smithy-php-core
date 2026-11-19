@@ -65,6 +65,16 @@ class FloatDocument extends AbstractDocument
     }
 
     /**
+     * Return the value as epoch seconds.
+     *
+     * @return float Epoch seconds.
+     */
+    public function asTimestamp(): float
+    {
+        return $this->value;
+    }
+
+    /**
      * Dispatch into {@see ShapeSerializerInterface::serializeFloat()}.
      *
      * @return void

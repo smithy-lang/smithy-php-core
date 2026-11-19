@@ -13,9 +13,14 @@ use Smithy\Core\Model\SmithyModel;
 
 /**
  * Lazily resolve runtime model shape IDs to schemas.
+ *
+ * The registry maps shape IDs to schemas only, so {@see classFor()} returns null and
+ * {@see deserialize()} reports every discriminator as unregistered.
  */
-final class TypeRegistry
+final class TypeRegistry implements TypeRegistryInterface
 {
+    use TypeRegistryDeserializeTrait;
+
     /** @var array<string, Schema> */
     private array $schemas = [];
 
@@ -65,6 +70,16 @@ final class TypeRegistry
         $this->schemasById[$conversionId] ??= $schema;
 
         return $schema;
+    }
+
+    /**
+     * Return null. Runtime models have no generated classes.
+     *
+     * @return class-string|null
+     */
+    public function classFor(string $shapeId): ?string
+    {
+        return null;
     }
 
     /**
