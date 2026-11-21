@@ -62,6 +62,7 @@ final class Schema
     public const T_HTTP_CHECKSUM = 28;
     public const T_PAGINATED = 29;
     public const T_WAITABLE = 30;
+    public const T_UNSIGNED_PAYLOAD = 31;
 
     /** @var array<string, int> */
     private const TRAIT_KEYS_BY_ID = [
