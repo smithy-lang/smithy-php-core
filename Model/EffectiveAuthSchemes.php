@@ -32,13 +32,18 @@ final class EffectiveAuthSchemes
      * @param array<string, array<string, mixed>> $shapes
      * @param array<string, mixed> $serviceTraits
      * @param array<string, mixed> $operationTraits
+     * @param list<string> $authSchemeIds Auth scheme trait IDs known to the
+     *     caller. When no auth trait applies, service traits with these IDs
+     *     count as auth schemes alongside prelude schemes and traits whose
+     *     shapes carry the auth definition trait.
      *
      * @return list<string>
      */
     public static function resolve(
         array $shapes,
         array $serviceTraits,
-        array $operationTraits
+        array $operationTraits,
+        array $authSchemeIds = []
     ): array
     {
         $schemeIds = self::getExplicitAuthSchemes(
@@ -54,7 +59,8 @@ final class EffectiveAuthSchemes
         if ($schemeIds === null) {
             $schemeIds = self::findAppliedAuthSchemes(
                 $shapes,
-                $serviceTraits
+                $serviceTraits,
+                $authSchemeIds
             );
         }
 
@@ -102,17 +108,23 @@ final class EffectiveAuthSchemes
     /**
      * @param array<string, array<string, mixed>> $shapes
      * @param array<string, mixed> $serviceTraits
+     * @param list<string> $authSchemeIds
      *
      * @return list<string>
      */
     private static function findAppliedAuthSchemes(
         array $shapes,
-        array $serviceTraits
+        array $serviceTraits,
+        array $authSchemeIds
     ): array
     {
+        $knownSchemeIds = [
+            ...self::PRELUDE_AUTH_SCHEMES,
+            ...\array_fill_keys($authSchemeIds, true)
+        ];
         $schemeIds = [];
         foreach ($serviceTraits as $traitId => $_) {
-            if (isset(self::PRELUDE_AUTH_SCHEMES[$traitId])) {
+            if (isset($knownSchemeIds[$traitId])) {
                 $schemeIds[] = $traitId;
                 continue;
             }
