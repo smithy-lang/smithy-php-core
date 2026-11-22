@@ -136,8 +136,7 @@ final class SchemaConverter
                 $shape['value'] ?? [],
                 $building
             );
-        } elseif (
-            $shapeType === ShapeType::Enum
+        } elseif ($shapeType === ShapeType::Enum
             || $shapeType === ShapeType::IntEnum
         ) {
             $enumValues = $this->convertEnumValues($shape);
@@ -384,8 +383,7 @@ final class SchemaConverter
         if ($this->serviceIdsByOperation === null) {
             $serviceIdsByOperation = [];
             foreach ($this->model->getServiceIds() as $serviceId) {
-                foreach (
-                    $this->model->getServiceOperationIds($serviceId)
+                foreach ($this->model->getServiceOperationIds($serviceId)
                     as $containedOperationId
                 ) {
                     $serviceIdsByOperation[$containedOperationId][] =

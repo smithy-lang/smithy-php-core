@@ -278,7 +278,8 @@ final class SmithyModel
         string $serviceId,
         string $operationId,
         array $authSchemeIds = []
-    ): array {
+    ): array
+    {
         $this->expectShapeType($serviceId, 'service');
         $this->expectShapeType($operationId, 'operation');
 
@@ -652,9 +653,7 @@ final class SmithyModel
             );
         }
 
-        foreach (
-            ['operations', 'collectionOperations'] as $operationList
-        ) {
+        foreach (['operations', 'collectionOperations'] as $operationList) {
             foreach ($resource[$operationList] ?? [] as $operation) {
                 $this->appendOperationReference(
                     $operation,
