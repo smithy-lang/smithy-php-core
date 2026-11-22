@@ -13,7 +13,6 @@ use Smithy\Core\Exception\ApiException;
 use Smithy\Core\Exception\ErrorFault;
 use Smithy\Core\Serde\Schema;
 use Smithy\Core\Serde\SerializableStructInterface;
-use Smithy\Core\Serde\ShapeSerializerInterface;
 use Smithy\Core\Shape\Document\StructDocument;
 
 /**
@@ -22,6 +21,8 @@ use Smithy\Core\Shape\Document\StructDocument;
 final class DocumentException extends ApiException
     implements SerializableStructInterface
 {
+    use DocumentExceptionTrait;
+
     private StructDocument $document;
 
     /**
@@ -39,42 +40,6 @@ final class DocumentException extends ApiException
     {
         parent::__construct($message, $fault, $previous);
         $this->document = StructDocument::fromMembers($schema, $members);
-    }
-
-    /**
-     * Return the modeled error schema.
-     */
-    public function getSchema(): Schema
-    {
-        return $this->document->getSchema();
-    }
-
-    /**
-     * Serialize modeled error members.
-     *
-     * @return void
-     */
-    public function serializeMembers(ShapeSerializerInterface $serializer): void
-    {
-        $this->document->serializeMembers($serializer);
-    }
-
-    /**
-     * Serialize this modeled error.
-     *
-     * @return void
-     */
-    public function serialize(ShapeSerializerInterface $serializer, int $idx): void
-    {
-        $this->document->serialize($serializer, $idx);
-    }
-
-    /**
-     * Return one modeled member value.
-     */
-    public function getMemberValue(Schema $member): mixed
-    {
-        return $this->document->getMemberValue($member);
     }
 
     /**
