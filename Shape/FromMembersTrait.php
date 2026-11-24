@@ -28,9 +28,8 @@ trait FromMembersTrait
     /**
      * Build an instance from pre-hydrated positional member slots.
      *
-     * @internal Called by the runtime deserializer. Not part of the public API. Callers
-     *           constructing an instance from application-owned data should use
-     *           {@see \Smithy\Core\Shape\Utils\ArrayShapeSerializer::fromArray()} instead.
+     * Deserializers call this. To build an instance from application-owned
+     * data, use {@see \Smithy\Core\Shape\Utils\ArrayShapeSerializer::fromArray()}.
      *
      * @param array<int, mixed> $members Positional values indexed by member index. Ordering
      *              matches the generated constructor parameter order.
