@@ -101,7 +101,7 @@ This package depends only on PHP.
 
 ## Design
 
-See [Core Runtime Design](../../docs/design/core/core-runtime-design.md).
+See [Core Runtime Design](https://github.com/smithy-lang/smithy-php/blob/main/docs/design/core/core-runtime-design.md).
 
 ## Contributing
 
