@@ -231,4 +231,11 @@ interface ShapeSerializerInterface
         ?DocumentInterface $value,
         int $idx
     ): void;
+
+    /**
+     * Return the encoded payload and reset the serializer for reuse.
+     *
+     * @return string Encoded payload in the serializer's wire format.
+     */
+    public function flush(): string;
 }

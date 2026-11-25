@@ -77,7 +77,13 @@ enum TimestampFormat: int
     {
         switch ($this->value) {
             case 0:
-                return $value + 0;
+                if (!\is_numeric($value)) {
+                    throw new \InvalidArgumentException(
+                        "Invalid {$this->name} timestamp '{$value}'."
+                    );
+                }
+
+                return (float) $value;
 
             case 1:
                 $len = \strlen($value);

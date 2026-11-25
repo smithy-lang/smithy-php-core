@@ -80,8 +80,7 @@ final class ArrayShapeSerializer
      */
     public static function fromArray(string $className, array $data): object
     {
-        /** @var Schema $schema */
-        $schema = $className::schema();
+        $schema = self::classSchema($className);
         if ($schema->type === ShapeType::Union->value) {
             return self::fromUnionArray($className, $schema, $data);
         }
@@ -128,13 +127,39 @@ final class ArrayShapeSerializer
         DocumentInterface $document
     ): object
     {
-        /** @var Schema $schema */
-        $schema = $className::schema();
+        $schema = self::classSchema($className);
 
         return self::fromArray(
             $className,
             self::documentToArray($schema, $document, null)
         );
+    }
+
+    /**
+     * Read the static schema of a generated structure or union class.
+     *
+     * @param class-string<SerializableStructInterface|UnionInterface> $className
+     *
+     * @throws \InvalidArgumentException When the class has no static `schema()` method, or it
+     *         returns something other than a Schema.
+     */
+    private static function classSchema(string $className): Schema
+    {
+        $schemaFactory = [$className, 'schema'];
+        if (!\is_callable($schemaFactory)) {
+            throw new \InvalidArgumentException(
+                "{$className} must be a generated shape with a static schema() method."
+            );
+        }
+
+        $schema = $schemaFactory();
+        if (!$schema instanceof Schema) {
+            throw new \InvalidArgumentException(
+                "{$className}::schema() must return a Schema."
+            );
+        }
+
+        return $schema;
     }
 
     /**
