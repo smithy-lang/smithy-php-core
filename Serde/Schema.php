@@ -156,7 +156,8 @@ final class Schema
      * @param string|null $memberName Member name for member schemas, null for root schemas.
      * @param int|null $memberIndex Position index for this member (used by switch-dispatched
      *                 deserializers).
-     * @param list<Schema> $members Member schemas (for structures/unions).
+     * @param array<Schema> $members Member schemas (for structures/unions). Keys are
+     *                 ignored: each member is indexed by its own name and index.
      * @param Schema|null $listMember Schema for list item type.
      * @param Schema|null $mapKey Schema for map key type.
      * @param Schema|null $mapValue Schema for map value type.
