@@ -458,6 +458,13 @@ final class ArrayShapeSerializer
                 if ($class === null || !\is_array($value)) {
                     return $value;
                 }
+                if (!\is_a($class, SerializableStructInterface::class, true)
+                    && !\is_a($class, UnionInterface::class, true)
+                ) {
+                    throw new \InvalidArgumentException(
+                        "{$class} must be a generated shape with a static schema() method."
+                    );
+                }
                 // Nested structures and unions recurse through the serializer
                 // using the target class named on the member schema.
                 return self::fromArray($class, $value);
