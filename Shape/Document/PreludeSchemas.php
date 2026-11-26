@@ -98,7 +98,11 @@ final class PreludeSchemas
             ShapeType::Structure => 'Structure',
             ShapeType::Union => 'Union',
             ShapeType::Enum => 'Enum',
-            ShapeType::IntEnum => 'IntEnum'
+            ShapeType::IntEnum => 'IntEnum',
+            ShapeType::Operation, ShapeType::Resource, ShapeType::Service =>
+                throw new \InvalidArgumentException(
+                    "{$type->name} has no prelude schema."
+                )
         };
     }
 }

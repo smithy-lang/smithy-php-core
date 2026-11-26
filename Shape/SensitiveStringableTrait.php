@@ -34,12 +34,6 @@ trait SensitiveStringableTrait
      */
     public function __debugInfo(): array
     {
-        if (!($this instanceof SerializableStructInterface)
-            && !($this instanceof UnionInterface)
-        ) {
-            return [];
-        }
-
         return SensitiveDataRedactor::debugInfo($this);
     }
 

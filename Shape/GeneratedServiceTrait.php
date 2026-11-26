@@ -16,7 +16,7 @@ use Smithy\Core\Serde\Schema;
  */
 trait GeneratedServiceTrait
 {
-    private static ?ServiceInterface $serviceInstance = null;
+    private static ?self $serviceInstance = null;
 
     /** @var list<OperationInterface>|null */
     private static ?array $operationInstances = null;

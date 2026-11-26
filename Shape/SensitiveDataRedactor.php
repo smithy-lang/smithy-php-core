@@ -27,13 +27,22 @@ final class SensitiveDataRedactor
     private const MAX_DEPTH = 64;
     private const MAX_DEPTH_REACHED = '<maximum debug depth reached>';
 
-    public static function debugInfo(
-        SerializableStructInterface|UnionInterface $value
-    ): array
+    /**
+     * Return the redacted debug view of a structure or union.
+     *
+     * @return array<string, mixed> Redacted members, or an empty array when
+     *         `$value` is not a structure or union.
+     */
+    public static function debugInfo(object $value): array
     {
-        return $value instanceof SerializableStructInterface
-            ? self::redactStructure($value, $value->getSchema(), 0)
-            : self::redactUnion($value, $value->getSchema(), 0);
+        if ($value instanceof SerializableStructInterface) {
+            return self::redactStructure($value, $value->getSchema(), 0);
+        }
+        if ($value instanceof UnionInterface) {
+            return self::redactUnion($value, $value->getSchema(), 0);
+        }
+
+        return [];
     }
 
     /**

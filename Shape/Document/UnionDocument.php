@@ -59,7 +59,7 @@ final class UnionDocument extends AbstractDocument implements UnionInterface
             $valueSchema,
             $tag,
             $value,
-            $valueSchema->getMember($tag)?->memberIndex ?? -1,
+            $valueSchema->getMember($tag)->memberIndex ?? -1,
             $schema
         );
     }
