@@ -77,12 +77,23 @@ final class ArrayShapeSerializer
      *        wire member names.
      *
      * @return TShape Hydrated instance of `$className`.
+     * @throws \InvalidArgumentException When `$className` is a union variant class and the data
+     *         names another variant.
      */
     public static function fromArray(string $className, array $data): object
     {
         $schema = self::classSchema($className);
         if ($schema->type === ShapeType::Union->value) {
-            return self::fromUnionArray($className, $schema, $data);
+            $union = self::fromUnionArray($className, $schema, $data);
+            if (!$union instanceof $className) {
+                // A variant class's create() builds whichever variant the data names.
+                throw new \InvalidArgumentException(
+                    "{$className} does not match the union variant in the data;"
+                    . ' pass the union base class.'
+                );
+            }
+
+            return $union;
         }
 
         $args = [];
@@ -755,10 +766,10 @@ final class ArrayShapeSerializer
     }
 
     /**
-     * @param array<string, mixed> $map Raw map entries.
+     * @param array<array-key, mixed> $map Raw map entries.
      * @param Schema|null $valueSchema Schema for the map's value type, or null when unknown.
      *
-     * @return array<string, mixed> Hydrated map entries.
+     * @return array<array-key, mixed> Hydrated map entries.
      */
     private static function hydrateMap(array $map, ?Schema $valueSchema): array
     {
@@ -790,10 +801,10 @@ final class ArrayShapeSerializer
     }
 
     /**
-     * @param array<string, mixed> $map Entries to unwrap.
+     * @param array<array-key, mixed> $map Entries to unwrap.
      * @param Schema|null $valueSchema Schema for the value type, or null when unknown.
      *
-     * @return array<string, mixed> Unwrapped entries.
+     * @return array<array-key, mixed> Unwrapped entries.
      */
     private static function unwrapMap(array $map, ?Schema $valueSchema): array
     {

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Smithy\Core\Serde;
 
+use Psr\Http\Message\StreamInterface;
 use Smithy\Core\Shape\BigDecimal;
 use Smithy\Core\Shape\BigInteger;
 use Smithy\Core\Shape\Document\DocumentInterface;
@@ -110,13 +111,18 @@ interface ShapeSerializerInterface
      * Serialize a blob (ShapeType::Blob) value.
      *
      * @param Schema $schema Member schema for the field being written.
-     * @param string $value Raw bytes to encode. The codec applies any wire-level encoding (e.g.
-     *               base64) per the format.
+     * @param string|StreamInterface $value Raw bytes to encode, or a stream of them. The codec
+     *               applies any wire-level encoding (e.g. base64) per the format. Streaming
+     *               members of generated shapes pass a stream.
      * @param int $idx Positional index of the member in the parent frame.
      *
      * @return void
      */
-    public function serializeBlob(Schema $schema, string $value, int $idx): void;
+    public function serializeBlob(
+        Schema $schema,
+        string|StreamInterface $value,
+        int $idx
+    ): void;
 
     /**
      * Serialize a timestamp (ShapeType::Timestamp) value.
@@ -152,7 +158,8 @@ interface ShapeSerializerInterface
      * Serialize a map (ShapeType::Map) shape.
      *
      * @param Schema $schema Member schema for the field being written.
-     * @param array<string, mixed> $map String-keyed map of member values.
+     * @param array<array-key, mixed> $map Map of member values. PHP stores numeric-string keys
+     *               such as "1" as ints; codecs write every key as a string.
      * @param int $idx Positional index of the member in the parent frame.
      *
      * @return void

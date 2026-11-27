@@ -139,7 +139,7 @@ final class StructDocument extends AbstractDocument
     public function withMemberValue(Schema $member, mixed $value): static
     {
         $members = $this->members;
-        $members[$member->memberIndex] = $value;
+        $members[self::memberIndex($member)] = $value;
 
         return new self(
             $this->valueSchema,
@@ -269,7 +269,7 @@ final class StructDocument extends AbstractDocument
      */
     private function getMemberDocument(Schema $member): ?AbstractDocument
     {
-        $index = $member->memberIndex;
+        $index = self::memberIndex($member);
         if (!\array_key_exists($index, $this->documents)) {
             $this->documents[$index] = AbstractDocument::fromSchemaValue(
                 $member,
@@ -278,5 +278,17 @@ final class StructDocument extends AbstractDocument
         }
 
         return $this->documents[$index];
+    }
+
+    /**
+     * Return the positional index of a member schema.
+     *
+     * @throws \InvalidArgumentException When `$member` is not a member schema.
+     */
+    private static function memberIndex(Schema $member): int
+    {
+        return $member->memberIndex ?? throw new \InvalidArgumentException(
+            "Schema {$member->id} is not a member schema."
+        );
     }
 }

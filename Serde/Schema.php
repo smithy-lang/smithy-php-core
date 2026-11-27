@@ -166,7 +166,7 @@ final class Schema
      * @param array<string, mixed> $traitsById Effective traits keyed by shape ID.
      * @param array<string, mixed> $directTraitsById Direct traits keyed by shape ID.
      * @param Schema|SchemaReference|null $target Runtime target for model-derived references.
-     * @param string|null $targetClass FQCN of the generated target shape class.
+     * @param class-string|null $targetClass FQCN of the generated target shape class.
      * @param array<string, string|int> $enumValues Enum member name to modeled value.
      * @param string|null $phpName Generated PHP name for this member.
      *
@@ -193,6 +193,11 @@ final class Schema
     {
         $this->type = $type->value;
         foreach ($members as $member) {
+            if ($member->memberName === null || $member->memberIndex === null) {
+                throw new \InvalidArgumentException(
+                    "Member schema {$member->id} needs a memberName and memberIndex."
+                );
+            }
             $this->membersByName[$member->memberName] = $member;
             // Key by the member's own memberIndex rather than the
             // foreach key. The constructor accepts a list of member

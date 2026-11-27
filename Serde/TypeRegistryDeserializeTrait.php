@@ -11,6 +11,7 @@ namespace Smithy\Core\Serde;
 
 use Smithy\Core\Shape\Document\DocumentInterface;
 use Smithy\Core\Shape\Exception\InvalidShapeValueException;
+use Smithy\Core\Shape\UnionInterface;
 
 /**
  * Implement {@see TypeRegistryInterface::deserialize()} for registries that map shape IDs to
@@ -24,8 +25,8 @@ trait TypeRegistryDeserializeTrait
      * @param DocumentInterface $document Document carrying a discriminator.
      *
      * @return object Hydrated shape instance.
-     * @throws InvalidShapeValueException When the document has no discriminator or the
-     *         discriminator has no registered class.
+     * @throws InvalidShapeValueException When the document has no discriminator, or the
+     *         discriminator has no registered structure or union class.
      */
     public function deserialize(DocumentInterface $document): object
     {
@@ -40,6 +41,15 @@ trait TypeRegistryDeserializeTrait
         if ($class === null) {
             throw new InvalidShapeValueException(
                 "No registered shape for discriminator '{$shapeId}'."
+            );
+        }
+
+        if (!\is_a($class, SerializableStructInterface::class, true)
+            && !\is_a($class, UnionInterface::class, true)
+        ) {
+            throw new InvalidShapeValueException(
+                "Discriminator '{$shapeId}' names {$class}, which is not a"
+                . ' structure or union.'
             );
         }
 

@@ -34,7 +34,8 @@ final class CompositeTypeRegistry implements TypeRegistryInterface
         TypeRegistryInterface ...$rest
     ): self
     {
-        return new self([$first, $second, ...$rest]);
+        // Named arguments give the variadic string keys.
+        return new self([$first, $second, ...\array_values($rest)]);
     }
 
     /**
