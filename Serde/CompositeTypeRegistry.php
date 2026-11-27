@@ -54,7 +54,7 @@ final class CompositeTypeRegistry implements TypeRegistryInterface
     }
 
     /**
-     * Resolve a shape ID to a class through the first registry that has one.
+     * Return the class name from the first registry that has one, or null when none has.
      */
     public function classFor(string $shapeId): ?string
     {

@@ -36,7 +36,7 @@ final class UnionDocument extends AbstractDocument implements UnionInterface
         private readonly string $tag,
         private readonly mixed $value,
         private readonly int $memberIndex,
-        Schema $serializationSchema
+        private readonly Schema $serializationSchema
     )
     {
         parent::__construct($serializationSchema);
@@ -208,7 +208,7 @@ final class UnionDocument extends AbstractDocument implements UnionInterface
     ): void
     {
         $serializer->serializeUnion(
-            $this->schema,
+            $this->serializationSchema,
             $this,
             $idx
         );

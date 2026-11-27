@@ -422,11 +422,9 @@ final class SchemaConverter
             return;
         }
 
-        [$path, $query] = \array_pad(
-            \explode('?', $uri, 2),
-            2,
-            null
-        );
+        $parts = \explode('?', $uri, 2);
+        $path = $parts[0];
+        $query = $parts[1] ?? null;
         if (!isset($http['pathSegments']) && \str_contains($path, '{')) {
             $memberIndexes = [];
             $inputId = $this->model->getOperationInputId($operationId);

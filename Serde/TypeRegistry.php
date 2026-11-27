@@ -74,8 +74,6 @@ final class TypeRegistry implements TypeRegistryInterface
 
     /**
      * Return null. Runtime models have no generated classes.
-     *
-     * @return class-string|null
      */
     public function classFor(string $shapeId): ?string
     {

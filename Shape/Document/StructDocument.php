@@ -37,7 +37,7 @@ final class StructDocument extends AbstractDocument
     private function __construct(
         private readonly Schema $valueSchema,
         private readonly array $members,
-        Schema $serializationSchema
+        private readonly Schema $serializationSchema
     )
     {
         parent::__construct($serializationSchema);
@@ -144,7 +144,7 @@ final class StructDocument extends AbstractDocument
         return new self(
             $this->valueSchema,
             $members,
-            $this->schema
+            $this->serializationSchema
         );
     }
 
@@ -256,7 +256,7 @@ final class StructDocument extends AbstractDocument
     ): void
     {
         $serializer->serializeStruct(
-            $this->schema,
+            $this->serializationSchema,
             $this,
             $idx
         );

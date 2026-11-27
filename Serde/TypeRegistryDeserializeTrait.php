@@ -48,8 +48,7 @@ trait TypeRegistryDeserializeTrait
             && !\is_a($class, UnionInterface::class, true)
         ) {
             throw new InvalidShapeValueException(
-                "Discriminator '{$shapeId}' names {$class}, which is not a"
-                . ' structure or union.'
+                "Discriminator '{$shapeId}' names '{$class}', which is not a structure or union."
             );
         }
 

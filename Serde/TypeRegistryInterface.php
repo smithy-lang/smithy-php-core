@@ -29,11 +29,9 @@ interface TypeRegistryInterface
     public function schemaFor(string $shapeId): ?Schema;
 
     /**
-     * Resolve a shape ID to its generated PHP class.
+     * Return the generated class name for a shape ID, or null when the ID has no registered class.
      *
      * @param string $shapeId Fully-qualified Smithy shape ID.
-     *
-     * @return class-string|null Generated class, or null when the ID has no registered class.
      */
     public function classFor(string $shapeId): ?string;
 
